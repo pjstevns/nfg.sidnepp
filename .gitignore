@@ -1,0 +1,8 @@
+*.swp
+parts/
+lib/
+include/
+bin/
+eggs/
+develop-eggs/
+.installed.cfg
