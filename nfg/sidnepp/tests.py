@@ -16,7 +16,7 @@ class testSidnEPP(unittest.TestCase):
 
     def testHello(self):
         s = self.o.hello()
-        print s.xpath('/a:epp/greeting/svid')
+        print s.xpath('epp')
 
 #        self.failUnless(len(s) > 0)
 #

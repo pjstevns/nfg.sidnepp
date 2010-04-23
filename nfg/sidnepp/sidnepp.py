@@ -53,9 +53,7 @@ class SIDNEpp:
         buf = self._fd.read(4)
         need = struct.unpack(">L", buf)
         need = need[0]-4
-        s = self._fd.read(need)
-        print s
-        return etree.fromstring(s)
+        return etree.fromstring(self._fd.read(need), self.parser)
 
     def hello(self):
         xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
