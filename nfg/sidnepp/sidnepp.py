@@ -16,7 +16,8 @@ from StringIO import StringIO
 
 STATE_INIT      = 0x01
 STATE_CONNECTED = 0x02
-STATE_LOGGEDIN  = 0x04
+STATE_SESSION   = 0x04
+STATE_LOGGEDIN  = 0x08
 
 class SIDNEpp:
     implements(IEpp)
@@ -42,18 +43,31 @@ class SIDNEpp:
     def write(self, message):
         assert(self._state > STATE_INIT)
         # validate
-        etree.fromstring(message, self.parser)
+        self.parse(message)
         l = len(message)+4
         data = struct.pack(">L", l)
         self._fd.write(data)
         self._fd.write(message)
         return self._read()
 
+    def parse(self, message):
+        return etree.fromstring(message, self.parser)
+
+    def query(self, element, query):
+        return element.xpath(query, 
+                             namespaces={
+                                 'epp': 'urn:ietf:params:xml:ns:epp-1.0',
+                                 'contact':'urn:ietf:params:xml:ns:contact-1.0',
+                                 'host': 'urn:ietf:params:xml:ns:host-1.0',
+                                 'domain': 'urn:ietf:params:xml:ns:domain-1.0',
+                                 'ext': 'urn:ietf:params:xml:ns:sidn-ext-epp-1.0',
+                             })
+
     def _read(self):
         buf = self._fd.read(4)
         need = struct.unpack(">L", buf)
         need = need[0]-4
-        return etree.fromstring(self._fd.read(need), self.parser)
+        return self.parse(self._fd.read(need))
 
     def hello(self):
         xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
@@ -61,8 +75,9 @@ class SIDNEpp:
           <hello/>
         </epp>"""
         assert(self._state < STATE_LOGGEDIN)
-        return self.write(xml)
-
+        r = self.write(xml)
+        self._state = STATE_SESSION
+        return r
 
     def login(self, login, password, newpassword=None, lang='NL'):
         xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
@@ -102,11 +117,10 @@ class SIDNEpp:
         </command>
         </epp>
         """
-        assert(self._state == STATE_LOGGEDIN)
+        if self._state < STATE_CONNECTED: return
         res = self.write(xml)
         self._state = STATE_CONNECTED
         return res
-        
 
     def poll(self, ack=None):
         pass
