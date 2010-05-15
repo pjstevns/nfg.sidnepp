@@ -12,17 +12,36 @@ from zope.interface import implements
 from interfaces import IEpp
 import socket, struct, ssl, string
 from lxml import etree
-from StringIO import StringIO
 
 STATE_INIT      = 0x01
 STATE_CONNECTED = 0x02
 STATE_SESSION   = 0x04
 STATE_LOGGEDIN  = 0x08
 
-class SIDNEpp:
+DEBUG=1
+
+def debug(msg=None):
+    if msg and DEBUG: print msg
+
+class Borg(object):
+    _state = {}
+
+    def __new__(cls, *p, **k):
+        self = object.__new__(cls, *p, **k)
+        self.__dict__ = cls._state
+        return self
+
+
+class Singleton(object):
+    def __new__(cls, *p, **k):
+        if not '_the_instance' in cls.__dict__:
+            cls._the_instance = object.__new__(cls)
+            return cls._the_instance
+
+class SIDNEpp(Borg):
     implements(IEpp)
 
-    _state = STATE_INIT
+    _connection_State = STATE_INIT
 
     def __init__(self, host=None, port=None):
         self.host = host
@@ -34,14 +53,17 @@ class SIDNEpp:
         self.hello()
 
     def connect(self):
-        assert(self._state == STATE_INIT)
+        if self._connection_State > STATE_INIT: 
+            debug("already connected")
+            return
+
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((self.host, self.port))
         self._fd = ssl.wrap_socket(s)
-        self._state = STATE_CONNECTED
+        self._connection_State = STATE_CONNECTED
 
     def write(self, message):
-        assert(self._state > STATE_INIT)
+        assert(self._connection_State > STATE_INIT)
         # validate
         self.parse(message)
         l = len(message)+4
@@ -74,9 +96,8 @@ class SIDNEpp:
         <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
           <hello/>
         </epp>"""
-        assert(self._state < STATE_LOGGEDIN)
         r = self.write(xml)
-        self._state = STATE_SESSION
+        self._connection_State = STATE_SESSION
         return r
 
     def login(self, login, password, newpassword=None, lang='NL'):
@@ -103,7 +124,7 @@ class SIDNEpp:
         </epp>  
         """ % (login, password, lang)
         res = self.write(xml)
-        self._state = STATE_LOGGEDIN
+        self._connection_State = STATE_LOGGEDIN
         return res
 
     def logout(self):
@@ -117,9 +138,11 @@ class SIDNEpp:
         </command>
         </epp>
         """
-        if self._state < STATE_CONNECTED: return
+        if self._connection_State < STATE_CONNECTED: 
+            debug("not logged in")
+            return
         res = self.write(xml)
-        self._state = STATE_CONNECTED
+        self._connection_State = STATE_CONNECTED
         return res
 
     def poll(self, ack=None):
