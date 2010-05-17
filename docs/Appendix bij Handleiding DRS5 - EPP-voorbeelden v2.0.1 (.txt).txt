@@ -1,0 +1,1655 @@
+Appendix
+EPP voorbeelden
+Appendix bij de handleiding Domeinregistratie DRS5 
+16  maart 2010
+Appendix: EPP Voorbeelden
+Versie 2.0.1
+© SIDN
+
+
+
+Voorbeelden
+
+Hello / greeting
+Voorbeeld EPP commando
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+	<hello/>
+</epp>
+Voorbeeld response bericht
+<?xml version="1.0" encoding="UTF-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+	<greeting>
+		<svID>drs.domain-registry.nl</svID>
+		<svDate>2008-12-03T14:00:17.372Z</svDate>
+		<svcMenu>
+			<version>1.0</version>
+			<lang>en</lang>
+			<lang>nl</lang>
+			<objURI>urn:ietf:params:xml:ns:contact-1.0</objURI>
+			<objURI>urn:ietf:params:xml:ns:domain-1.0</objURI>
+			<objURI>urn:ietf:params:xml:ns:host-1.0</objURI>
+			<svcExtension>
+				<extURI>http://rxsd.domain-registry.nl/sidn-ext-epp-1.0</extURI>
+			</svcExtension>
+		</svcMenu>
+		<dcp>
+			<access>
+				<all/>
+			</access>
+			<statement>
+				<purpose>
+					<admin/>
+					<prov/>
+				</purpose>
+				<recipient>
+					<ours/>
+					<public/>
+				</recipient>
+				<retention>
+					<stated/>
+				</retention>
+			</statement>
+		</dcp>
+	</greeting>
+</epp>
+Login
+Voorbeeld EPP commando
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <command>
+    <login>
+      <clID>104000</clID>
+      <pw>geheim</pw>
+      <options>
+        <version>1.0</version>
+        <lang>en</lang>
+      </options>
+      <svcs>
+        <objURI>urn:ietf:params:xml:ns:contact-1.0</objURI>
+        <objURI>urn:ietf:params:xml:ns:host-1.0</objURI>
+        <objURI>urn:ietf:params:xml:ns:domain-1.0</objURI>
+        <svcExtension>
+          <extURI>http://rxsd.domain-registry.nl/sidn-ext-epp-1.0</extURI>
+        </svcExtension>
+      </svcs>
+    </login>
+    <clTRID>300100</clTRID>
+  </command>
+</epp>
+Voorbeeld response bericht succes
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <response>
+    <result code="1000">
+      <msg>The transaction was completed successfully.</msg>
+    </result>
+    <trID>
+      <clTRID>300100</clTRID>
+      <svTRID>71D8D813-EF3A-7449-ECF2-64A419E5FDAE</svTRID>
+    </trID>
+  </response>
+</epp>
+Voorbeeld response bericht fout
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <response>
+    <result code="2200">
+      <msg>Authentication error</msg>
+    </result>
+    <extension>
+      <sidn-ext-epp:ext>
+        <sidn-ext-epp:response>
+          <sidn-ext-epp:msg field="registrarnummer" code=" T0003">Het opgegeven registrarnummer is onbekend.</sidn-ext-epp:msg>
+        </sidn-ext-epp:response>
+      </sidn-ext-epp:ext>
+    </extension>
+    <trID>
+      <clTRID>300100</clTRID>
+      <svTRID>E60A260F-AF34-71C1-006E-085C2AF1DDA0</svTRID>
+    </trID>
+  </response>
+</epp>
+Logout
+Voorbeeld EPP commando
+<?xml version="1.0" encoding="UTF-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
+	<command>
+		<logout/>
+	</command>
+</epp>
+Voorbeeld response bericht
+<?xml version="1.0" encoding="UTF-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+	<response>
+		<result code="1500">
+			<msg>You are now logged off.</msg>
+		</result>
+		<trID>
+			<svTRID>ABC-12345</svTRID>
+		</trID>
+	</response>
+</epp>
+Poll  (op = “req”)
+Voorbeeld EPP commando
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+	<command>
+		<poll op="req"/>
+		<clTRID>ABC-12345</clTRID>
+	</command>
+</epp>
+Voorbeeld response bericht succes host:update
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <response>
+    <result code="1301">
+      <msg>The message has been picked up. Please confirm receipt to remove the message from the queue.</msg>
+    </result>
+    <msgQ count="9" id="100000">
+      <qDate>2009-10-27T10:34:32.000Z</qDate>
+      <msg>1202 Change to name server ns1.bol.nl processed</msg>
+    </msgQ>
+    <resData>
+      <sidn-ext-epp:pollData>
+        <sidn-ext-epp:command>host:update</sidn-ext-epp:command>
+        <sidn-ext-epp:data>
+          <result code="1000">
+            <msg>The name server has been changed after consideration.</msg>
+          </result>
+          <trID>
+            <clTRID>TestWZNMC10T50</clTRID>
+            <svTRID>100012</svTRID>
+          </trID>
+        </sidn-ext-epp:data>
+      </sidn-ext-epp:pollData>
+    </resData>
+    <trID>
+      <clTRID>500100-300</clTRID>
+      <svTRID>F57DC47E-EC1B-14B8-D672-4C7100C1A890</svTRID>
+    </trID>
+  </response>
+</epp>
+Voorbeeld response bericht succes contact:update
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <response>
+    <result code="1301">
+      <msg>The message has been picked up. Please confirm receipt to remove the message from the queue.</msg>
+    </result>
+    <msgQ count="8" id="100001">
+      <qDate>2009-10-27T10:35:32.000Z</qDate>
+      <msg>1100 Details of contact person TEA000031-GOEDA updated</msg>
+    </msgQ>
+    <resData>
+      <sidn-ext-epp:pollData>
+        <sidn-ext-epp:command>contact:update</sidn-ext-epp:command>
+        <sidn-ext-epp:data>
+          <result code="1000">
+            <msg>The contact person has been changed after consideration.</msg>
+          </result>
+          <trID>
+            <svTRID>100006</svTRID>
+          </trID>
+        </sidn-ext-epp:data>
+      </sidn-ext-epp:pollData>
+    </resData>
+    <trID>
+      <clTRID>500100-301</clTRID>
+      <svTRID>F57DC47E-EC1B-14B8-D672-4C7100C1A891</svTRID>
+    </trID>
+  </response>
+</epp>
+Voorbeeld response bericht succes domain:create
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+  <response>
+    <result code="1301">
+      <msg>The message has been picked up. Please confirm receipt to remove the message from the queue.</msg>
+    </result>
+    <msgQ count="7" id="100002">
+      <qDate>2009-10-27T10:36:32.000Z</qDate>
+      <msg>1000 Application to register domain name bol.nl: opt-out approved</msg>
+    </msgQ>
+    <resData>
+      <sidn-ext-epp:pollData>
+        <sidn-ext-epp:command>domain:create</sidn-ext-epp:command>
+        <sidn-ext-epp:data>
+          <result code="1000">
+            <msg>The domain name has been registered with an opt-out.</msg>
+          </result>
+          <resData>
+            <domain:creData>
+              <domain:name>bol.nl</domain:name>
+              <domain:crDate>2009-10-23T09:27:19.590Z</domain:crDate>
+            </domain:creData>
+          </resData>
+          <trID>
+            <clTRID>ABC-12345</clTRID>
+            <svTRID>100031</svTRID>
+          </trID>
+        </sidn-ext-epp:data>
+      </sidn-ext-epp:pollData>
+    </resData>
+    <trID>
+      <clTRID>500100-302</clTRID>
+      <svTRID>F57DC47E-EC1B-14B8-D672-4C7100C1A892</svTRID>
+    </trID>
+  </response>
+</epp>
+Voorbeeld response bericht succes domain:delete
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">  <response>
+    <result code="1301">
+      <msg>The message has been picked up. Please confirm receipt to remove the message from the queue.</msg>
+    </result>
+    <msgQ count="6" id="100003">
+      <qDate>2009-10-27T10:37:32.000Z</qDate>
+      <msg>2018 ’Delete domain name’ transaction for bol.nl rejected</msg>
+    </msgQ>
+    <resData>
+      <sidn-ext-epp:pollData>
+        <sidn-ext-epp:command>domain:delete</sidn-ext-epp:command>
+        <sidn-ext-epp:data>
+          <result code="2308">
+            <msg>Deletion of the domain name has been considered and rejected because a constraint applies.</msg>
+          </result>
+          <trID>
+            <clTRID>TestVWDNC10T30</clTRID>
+            <svTRID>100045</svTRID>
+          </trID>
+        </sidn-ext-epp:data>
+      </sidn-ext-epp:pollData>
+    </resData>
+    <trID>
+      <clTRID>500100-303</clTRID>
+      <svTRID>F57DC47E-EC1B-14B8-D672-4C7100C1A893</svTRID>
+    </trID>
+  </response>
+</epp>
+Voorbeeld response bericht succes domain:update
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <response>
+    <result code="1301">
+      <msg>The message has been picked up. Please confirm receipt to remove the message from the queue.</msg>
+    </result>
+    <msgQ count="5" id="100004">
+      <qDate>2009-10-27T10:38:32.000Z</qDate>
+      <msg>1005 Opt-out request granted for bol.nl</msg>
+    </msgQ>
+    <resData>
+      <sidn-ext-epp:pollData>
+        <sidn-ext-epp:command>domain:update</sidn-ext-epp:command>
+        <sidn-ext-epp:data>
+          <result code="1000">
+            <msg>The domain name has been changed with an opt-out.</msg>
+          </result>
+          <trID>
+            <clTRID>500100-002</clTRID>
+            <svTRID>100010</svTRID>
+          </trID>
+        </sidn-ext-epp:data>
+      </sidn-ext-epp:pollData>
+    </resData>
+    <trID>
+      <clTRID>500100-304</clTRID>
+      <svTRID>F57DC47E-EC1B-14B8-D672-4C7100C1A894</svTRID>
+    </trID>
+  </response>
+</epp>
+Voorbeeld response bericht succes domain:transfer
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+  <response>
+    <result code="1301">
+      <msg>The message has been picked up. Please confirm receipt to remove the message from the queue.</msg>
+    </result>
+    <msgQ count="4" id="100005">
+      <qDate>2009-10-27T10:39:32.000Z</qDate>
+      <msg>1015 Transfer domain name domaintransfer31.nl processed</msg>
+    </msgQ>
+    <resData>
+      <sidn-ext-epp:pollData>
+        <sidn-ext-epp:command>domain:transfer</sidn-ext-epp:command>
+        <sidn-ext-epp:data>
+          <result code="1000">
+            <msg>The domain name has been transferred.</msg>
+          </result>
+          <resData>
+            <domain:trnData>
+              <domain:name>domaintransfer31.nl</domain:name>
+              <domain:trStatus>pending</domain:trStatus>
+              <domain:reID>104000</domain:reID>
+              <domain:reDate>2009-10-29T13:06:34.935Z</domain:reDate>
+              <domain:acID>102000</domain:acID>
+              <domain:acDate>2009-11-03T13:06:34.935Z</domain:acDate>
+            </domain:trnData>
+          </resData>
+          <trID>
+            <clTRID>C0101C10T10</clTRID>
+            <svTRID>100027</svTRID>
+          </trID>
+        </sidn-ext-epp:data>
+      </sidn-ext-epp:pollData>
+    </resData>
+    <trID>
+      <clTRID>500100-305</clTRID>
+      <svTRID>F57DC47E-EC1B-14B8-D672-4C7100C1A895</svTRID>
+    </trID>
+  </response>
+</epp>
+Voorbeeld response bericht succes domain:transfer-start
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+  <response>
+    <result code="1301">
+      <msg>The message has been picked up. Please confirm receipt to remove the message from the queue.</msg>
+    </result>
+    <msgQ count="3" id="100006">
+      <qDate>2009-10-27T10:40:32.000Z</qDate>
+      <msg>1014 Transfer domain name domaintransfer31.nl is being processed</msg>
+    </msgQ>
+    <resData>
+      <sidn-ext-epp:pollData>
+        <sidn-ext-epp:command>domain:transfer-start</sidn-ext-epp:command>
+        <sidn-ext-epp:data>
+          <result code="1000">
+            <msg>Transfer of the domain name has begun.</msg>
+          </result>
+          <resData>
+            <domain:trnData>
+              <domain:name>domaintransfer31.nl</domain:name>
+              <domain:trStatus>pending</domain:trStatus>
+              <domain:reID>104000</domain:reID>
+              <domain:reDate>2009-10-29T13:06:34.935Z</domain:reDate>
+              <domain:acID>102000</domain:acID>
+              <domain:acDate>2009-11-03T13:06:34.935Z</domain:acDate>
+            </domain:trnData>
+          </resData>
+          <trID>
+            <svTRID>100027</svTRID>
+          </trID>
+        </sidn-ext-epp:data>
+      </sidn-ext-epp:pollData>
+    </resData>
+    <trID>
+      <clTRID>500100-306</clTRID>
+      <svTRID>F57DC47E-EC1B-14B8-D672-4C7100C1A896</svTRID>
+    </trID>
+  </response>
+</epp>
+Voorbeeld response bericht succes domain:transfer-escalate
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <response>
+    <result code="1301">
+      <msg>The message has been picked up. Please confirm receipt to remove the message from the queue.</msg>
+    </result>
+    <msgQ count="2" id="100007">
+      <qDate>2009-10-27T10:41:32.000Z</qDate>
+      <msg>1021 ‘Escalate transfer’ transaction for bol.nl approved: token issued by SIDN</msg>
+    </msgQ>
+    <resData>
+      <sidn-ext-epp:pollData>
+        <sidn-ext-epp:command>domain:transfer-escalate</sidn-ext-epp:command>
+        <sidn-ext-epp:data>
+          <result code="1000">
+            <msg>Transfer of the domain name has been escalated.</msg>
+          </result>
+          <trID>
+            <clTRID>TestWZNMC10T50</clTRID>
+            <svTRID>100012</svTRID>
+          </trID>
+        </sidn-ext-epp:data>
+      </sidn-ext-epp:pollData>
+    </resData>
+    <trID>
+      <clTRID>500100-307</clTRID>
+      <svTRID>F57DC47E-EC1B-14B8-D672-4C7100C1A897</svTRID>
+    </trID>
+  </response>
+</epp>
+Voorbeeld response bericht succes domain:transfer-token-reminder
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <response>
+    <result code="1301">
+      <msg>The message has been picked up. Please confirm receipt to remove the message from the queue.</msg>
+    </result>
+    <msgQ count="1" id="100008">
+      <qDate>2009-10-27T1042:32.000Z</qDate>
+      <msg>1023 Reminder to issue token for domaintransfer36.nl</msg>
+    </msgQ>
+    <resData>
+      <sidn-ext-epp:pollData>
+        <sidn-ext-epp:command>domain:transfer-token-reminder</sidn-ext-epp:command>
+        <sidn-ext-epp:data>
+          <result code="1000">
+            <msg>Transfer token issue reminder.</msg>
+          </result>
+          <extension>
+            <sidn-ext-epp:ext>
+              <sidn-ext-epp:trnData>
+                <sidn-ext-epp:domainname>domaintransfer36.nl</sidn-ext-epp:domainname>
+                <sidn-ext-epp:requestor>104000</sidn-ext-epp:requestor>
+                <sidn-ext-epp:requestDate>2009-10-08T10:34:32.000Z</sidn-ext-epp:requestDate>
+                <sidn-ext-epp:supplyDate>2009-10-08T10:34:32.000Z</sidn-ext-epp:supplyDate>
+              </sidn-ext-epp:trnData>
+            </sidn-ext-epp:ext>
+          </extension>
+          <trID>
+            <svTRID>5BF24F8C-9D47-F2C6-7F74-2895EF2C2539</svTRID>
+          </trID>
+        </sidn-ext-epp:data>
+      </sidn-ext-epp:pollData>
+    </resData>
+    <trID>
+      <clTRID>500100-308</clTRID>
+      <svTRID>F57DC47E-EC1B-14B8-D672-4C7100C1A898</svTRID>
+    </trID>
+  </response>
+</epp>
+Voorbeeld response bericht succes domain:transfer-token-supply
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <response>
+    <result code="1301">
+      <msg>The message has been picked up. Please confirm receipt to remove the message from the queue.</msg>
+    </result>
+    <msgQ count="0" id="100009">
+      <qDate>2009-10-27T10:43:32.000Z</qDate>
+      <msg>1024 Token issued following escalation of transfer of domaintransfer36.nl</msg>
+    </msgQ>
+    <resData>
+      <sidn-ext-epp:pollData>
+        <sidn-ext-epp:command>domain:transfer-token-supply</sidn-ext-epp:command>
+        <sidn-ext-epp:data>
+          <result code="1000">
+            <msg>The issue of a token has been considered and a token has been issued.</msg>
+          </result>
+          <extension>
+            <sidn-ext-epp:ext>
+              <sidn-ext-epp:trnData>
+                <sidn-ext-epp:pw>pass123</sidn-ext-epp:pw>
+                <sidn-ext-epp:domainname>domaintransfer36.nl</sidn-ext-epp:domainname>
+                <sidn-ext-epp:requestDate>2009-10-08T10:34:32.000Z</sidn-ext-epp:requestDate>
+              </sidn-ext-epp:trnData>
+            </sidn-ext-epp:ext>
+         </extension>
+          <trID>
+            <svTRID>5BF24F8C-9D47-F2C6-7F74-2895EF2C2539</svTRID>
+          </trID>
+        </sidn-ext-epp:data>
+      </sidn-ext-epp:pollData>
+    </resData>
+    <trID>
+      <clTRID>500100-309</clTRID>
+      <svTRID>F57DC47E-EC1B-14B8-D672-4C7100C1A899</svTRID>
+    </trID>
+  </response>
+</epp>
+
+Poll  (op = “ack”)
+Voorbeeld EPP commando
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <command>
+    <poll op="ack" msgID="100000"/>
+    <clTRID>500100-303</clTRID>
+  </command>
+</epp>
+Voorbeeld response bericht
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <response>
+    <result code="1000">
+      <msg>The transaction was completed successfully.</msg>
+    </result>
+    <msgQ id="100000" count="13"/>
+    <trID>
+      <clTRID>500100-303</clTRID>
+      <svTRID>6A5D4AA8-EF2F-A653-3A22-CB56B1AE1F79</svTRID>
+    </trID>
+  </response>
+</epp>
+Domain check
+Voorbeeld EPP commando
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <command>
+    <check>
+      <domain:check
+        xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+        <domain:name>doris.nl</domain:name>
+        <domain:name>dyris.nl</domain:name>
+      </domain:check>
+    </check>
+    <clTRID>ABC-12345</clTRID>
+  </command>
+</epp>
+Voorbeeld response bericht succes
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+  <response>
+    <result code="1000">
+      <msg>The availability of the domain name has been checked.</msg>
+    </result>
+    <resData>
+      <domain:chkData>
+        <domain:cd>
+          <domain:name avail="false">doris.nl</domain:name>
+        </domain:cd>
+        <domain:cd>
+          <domain:name avail="true">dyris.nl</domain:name>
+        </domain:cd>
+      </domain:chkData>
+    </resData>
+    <trID>
+      <clTRID>ABC-12345</clTRID>
+      <svTRID>AB75F31C-0111-DF51-A78D-7E7747FE632B</svTRID>
+    </trID>
+  </response>
+</epp>
+Voorbeeld response bericht fout
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <response>
+    <result code="2400">
+      <msg>Validation of the transaction failed.</msg>
+    </result>
+    <extension>
+      <sidn-ext-epp:ext>
+        <sidn-ext-epp:response>
+          <sidn-ext-epp:msg field="domeinnaam" code="F0018">Waarde voldoet niet aan de expressie: ^.*[.][nN][lL]$.</sidn-ext-epp:msg>
+        </sidn-ext-epp:response>
+      </sidn-ext-epp:ext>
+    </extension>
+    <trID>
+      <clTRID>ABC-12345</clTRID>
+      <svTRID>2A91A23E-7754-3D2E-39FE-97386491C430</svTRID>
+    </trID>
+  </response>
+</epp>
+
+Domain info
+Voorbeeld EPP commando
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <command>
+    <info>
+      <domain:info xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+        <domain:name hosts="all">doris.nl</domain:name>
+      </domain:info>
+    </info>
+    <clTRID>ABC-12345</clTRID>
+  </command>
+</epp>
+Voorbeeld response bericht succes
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <response>
+    <result code="1000">
+      <msg>The domain name has been queried.</msg>
+    </result>
+    <resData>
+      <domain:infData>
+        <domain:name>doris.nl</domain:name>
+        <domain:roid>DNM_700-SIDN</domain:roid>
+        <domain:status s="ok"/>
+        <domain:registrant>TES000079-SL1SL</domain:registrant>
+        <domain:contact type="admin">TES000079-SO1SO</domain:contact>
+        <domain:contact type="tech">TES000079-SL1SL</domain:contact>
+        <domain:ns>
+          <domain:hostObj>ns1.doris.nl</domain:hostObj>
+        </domain:ns>
+        <domain:host>ns2.doris.nl</domain:host>
+        <domain:host>ns3.doris.nl</domain:host>
+        <domain:host>ns4.doris.nl</domain:host>
+        <domain:host>ns1.doris.nl</domain:host>
+        <domain:clID>SIDN0</domain:clID>
+        <domain:crID>SIDN0</domain:crID>
+        <domain:crDate>2009-08-10T00:00:00.000Z</domain:crDate>
+        <domain:upID>SIDN0</domain:upID>
+        <domain:upDate>2009-08-10T00:00:00.000Z</domain:upDate>
+        <domain:trDate>2010-08-12T00:00:00.000Z</domain:trDate>
+        <domain:authInfo>
+          <domain:pw>token4556</domain:pw>
+        </domain:authInfo>
+      </domain:infData>
+    </resData>
+    <extension>
+      <sidn-ext-epp:ext>
+        <sidn-ext-epp:infData>
+          <sidn-ext-epp:domain>
+            <sidn-ext-epp:optOut>false</sidn-ext-epp:optOut>
+            <sidn-ext-epp:limited>false</sidn-ext-epp:limited>
+          </sidn-ext-epp:domain>
+        </sidn-ext-epp:infData>
+      </sidn-ext-epp:ext>
+    </extension>
+    <trID>
+      <clTRID>ABC-12345</clTRID>
+      <svTRID>9F2ABEDA-3236-B7CB-AA92-F405CEF89E2F</svTRID>
+    </trID>
+  </response>
+</epp>
+Voorbeeld response bericht fout
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <response>
+    <result code="2303">
+      <msg>The specified domain name is unknown.</msg>
+    </result>
+    <extension>
+      <sidn-ext-epp:ext>
+        <sidn-ext-epp:response>
+          <sidn-ext-epp:msg field="" code="T0001">De opgegeven domeinnaam is onbekend.</sidn-ext-epp:msg>
+        </sidn-ext-epp:response>
+      </sidn-ext-epp:ext>
+    </extension>
+    <trID>
+      <clTRID>ABC-12345</clTRID>
+      <svTRID>7BEC47D3-6538-4AFB-0E2C-9AECB9394915</svTRID>
+    </trID>
+  </response>
+</epp>
+Domain create
+Voorbeeld EPP commando
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <command>
+    <create>
+      <domain:create 
+      xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+        <domain:name>bol.nl</domain:name>
+        <domain:ns>
+          <domain:hostObj>ns1.doris.nl</domain:hostObj>
+        </domain:ns>
+        <domain:registrant>SPT000001-CTPER</domain:registrant>
+        <domain:contact type="admin">SPT000001-CTPER</domain:contact>
+        <domain:contact type="tech">SPT000001-CTPER</domain:contact>
+        <domain:authInfo>
+          <domain:pw>2fooBAR</domain:pw>
+        </domain:authInfo>
+      </domain:create>
+    </create>
+    <clTRID>ABC-12345</clTRID>
+  </command>
+</epp>
+Voorbeeld response bericht succes
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+  <response>
+    <result code="1000">
+      <msg>The domain name has been registered.</msg>
+    </result>
+    <resData>
+      <domain:creData>
+        <domain:name>bol.nl</domain:name>
+        <domain:crDate>2009-10-23T09:27:19.590Z</domain:crDate>
+      </domain:creData>
+    </resData>
+    <trID>
+      <clTRID>ABC-12345</clTRID>
+      <svTRID>100031</svTRID>
+    </trID>
+  </response>
+</epp>
+Voorbeeld response bericht fout
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <response>
+    <result code="2302">
+      <msg>The domain name is already active or is excluded from registration.</msg>
+    </result>
+    <extension>
+      <sidn-ext-epp:ext>
+        <sidn-ext-epp:response>
+          <sidn-ext-epp:msg field="" code="C0024">De domeinnaam is reeds actief of de domeinnaam is uitgesloten van registratie.</sidn-ext-epp:msg>
+        </sidn-ext-epp:response>
+      </sidn-ext-epp:ext>
+    </extension>
+    <trID>
+      <clTRID>ABC-12345</clTRID>
+      <svTRID>100032</svTRID>
+    </trID>
+  </response>
+</epp>
+
+Domain update
+Voorbeeld EPP commando
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <command>
+    <update>
+      <domain:update xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+        <domain:name>domlimev.nl</domain:name>
+        <domain:add>
+          <domain:ns>               
+            <domain:hostObj>ns2.domlimev.nl</domain:hostObj>			 
+          </domain:ns>
+          <domain:contact type="tech">TST000504-DWDNR</domain:contact>
+        </domain:add>
+        <domain:rem>
+          <domain:ns>
+            <domain:hostObj>ns1.domlimev.nl</domain:hostObj>
+          </domain:ns>
+        </domain:rem>
+        <domain:chg>
+          <domain:registrant>TST000504-DWDNR</domain:registrant>
+        </domain:chg>
+      </domain:update>
+    </update>
+    <clTRID>500100-002</clTRID>
+  </command>
+</epp>
+Voorbeeld response bericht succes
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <response>
+    <result code="1000">
+      <msg>The domainname has been changed.</msg>
+    </result>
+    <trID>
+      <clTRID>500100-002</clTRID>
+      <svTRID>100010</svTRID>
+    </trID>
+  </response>
+</epp>
+Domain delete
+Voorbeeld EPP commando
+ <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+ <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+   <command>
+     <delete>
+       <domain:delete
+        xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+         <domain:name>domain100-verwijder.nl</domain:name>
+       </domain:delete>
+     </delete>
+     <clTRID>TestVWDNC10T20</clTRID>
+   </command>
+ </epp>
+Voorbeeld response bericht succes
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <response>
+    <result code="1000">
+      <msg>The domain name has been deleted.</msg>
+    </result>
+    <trID>
+      <clTRID>TestVWDNC10T20</clTRID>
+      <svTRID>100044</svTRID>
+    </trID>
+  </response>
+</epp>
+Voorbeeld response bericht fout
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <response>
+    <result code="2304">
+      <msg>This transaction is incompatible with the domain name’s current status.</msg>
+    </result>
+    <extension>
+      <sidn-ext-epp:ext>
+        <sidn-ext-epp:response>
+          <sidn-ext-epp:msg field="" code="C0001b">Transactie in combinatie met huidige status van de domeinnaam is niet toegestaan.</sidn-ext-epp:msg>
+        </sidn-ext-epp:response>
+      </sidn-ext-epp:ext>
+    </extension>
+    <trID>
+      <clTRID>TestVWDNC10T30</clTRID>
+      <svTRID>100045</svTRID>
+    </trID>
+  </response>
+</epp>
+
+Domain cancelDelete
+Voorbeeld EPP commando
+<?xml version="1.0" encoding="UTF-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+	<extension>
+		<sidn-ext-epp:command
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+ xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+			<sidn-ext-epp:domainCancelDelete>
+				<sidn-ext-epp:name>DOMAINdelete37.nl</sidn-ext-epp:name>
+			</sidn-ext-epp:domainCancelDelete>
+			<sidn-ext-epp:clTRID>OMVDC10T10</sidn-ext-epp:clTRID>
+		</sidn-ext-epp:command>
+	</extension>
+</epp>
+Voorbeeld response bericht succes
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <response>
+    <result code="1000">
+      <msg>Deletion of the domain name has been reversed.</msg>
+    </result>
+    <trID>
+      <clTRID>OMVDC10T10</clTRID>
+      <svTRID>100002</svTRID>
+    </trID>
+  </response>
+</epp>
+Domain transfer (op = “query”)
+Voorbeeld EPP commando
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <command>
+    <transfer op="query">
+      <domain:transfer
+         xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+        <domain:name>epptestdomein.nl</domain:name>
+      </domain:transfer>
+    </transfer>
+    <clTRID>CHKTEST1</clTRID>
+  </command>
+</epp>
+Voorbeeld response bericht
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+  <response>
+    <result code="1000">
+      <msg>De status van de verhuizing van de domeinnaam is gecontroleerd.</msg>
+    </result>
+    <resData>
+      <domain:trnData>
+        <domain:name>epptestdomein.nl</domain:name>
+        <domain:trStatus>pending</domain:trStatus>
+        <domain:reID>300300</domain:reID>
+        <domain:reDate>2009-10-16T09:56:15.656Z</domain:reDate>
+        <domain:acID>300100</domain:acID>
+        <domain:acDate>2009-10-16T09:56:15.656Z</domain:acDate>
+      </domain:trnData>
+    </resData>
+    <trID>
+      <clTRID>CHKTEST1</clTRID>
+      <svTRID>5BF24F8C-9D47-F2C6-7F74-2895EF2C2539</svTRID>
+    </trID>
+  </response>
+</epp>
+Domain transfer (op = “request”)
+Voorbeeld EPP commando
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <command>
+    <transfer op="request">
+      <domain:transfer
+       xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+        <domain:name>domaintransfer31.nl</domain:name>
+        <domain:authInfo>
+          <domain:pw>transfer31</domain:pw>
+        </domain:authInfo>
+      </domain:transfer>
+    </transfer>
+    <clTRID>C0101C10T10</clTRID>
+  </command>
+</epp>
+Voorbeeld response bericht succes
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <response>
+    <result code="1001">
+      <msg>Transfer of the domain name is in progress, subject to the mandatory grace period.</msg>
+    </result>
+    <resData>
+      <domain:trnData>
+        <domain:name>domaintransfer31.nl</domain:name>
+        <domain:trStatus>pending</domain:trStatus>
+        <domain:reID>104000</domain:reID>
+        <domain:reDate>2009-10-29T13:06:34.935Z</domain:reDate>
+        <domain:acID>102000</domain:acID>
+        <domain:acDate>2009-11-03T13:06:34.935Z</domain:acDate>
+      </domain:trnData>
+    </resData>
+    <trID>
+      <clTRID>C0101C10T10</clTRID>
+      <svTRID>100027</svTRID>
+    </trID>
+  </response>
+</epp>
+Domain transfer (op = “cancel”)
+Voorbeeld EPP commando
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <command>
+    <transfer op="cancel">
+      <domain:transfer
+         xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+        <domain:name>epptestdomein.nl</domain:name>
+      </domain:transfer>
+    </transfer>
+    <clTRID>CHKTEST1</clTRID>
+  </command>
+</epp>
+Voorbeeld response bericht (verkrijgende registrar)
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+  <response>
+    <result code="1000">
+      <msg>Het verhuizen van domeinnaam is ongedaan gemaakt.</msg>
+    </result>
+    <resData>
+      <domain:trnData>
+        <domain:name>epptestdomein.nl</domain:name>
+        <domain:trStatus>pending</domain:trStatus>
+        <domain:reID>300300</domain:reID>
+        <domain:reDate>2009-10-16T09:54:34.265Z</domain:reDate>
+        <domain:acID>300100</domain:acID>
+        <domain:acDate>2009-10-16T09:54:34.265Z</domain:acDate>
+      </domain:trnData>
+    </resData>
+    <trID>
+      <clTRID>CHKTEST1</clTRID>
+      <svTRID>CHKTEST2</svTRID>
+    </trID>
+  </response>
+</epp>
+Voorbeeld response bericht (latende registrar)
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <response>
+    <result code="1301">
+      <msg>The message has been picked up. Please confirm receipt to remove the message from the queue.</msg>
+    </result>
+    <msgQ count="10" id="100001">
+      <qDate>2010-02-10T08:23:09.000Z</qDate>
+      <msg>2014 Transfer of domain name bol.nl cancelled</msg>
+    </msgQ>
+    <resData>
+      <sidn-ext-epp:pollData>
+        <sidn-ext-epp:command>domain:transfer</sidn-ext-epp:command>
+        <sidn-ext-epp:data>
+          <result code="2308">
+            <msg>Transfer of the domain name has been reversed by the registrar.</msg>
+          </result>
+          <extension>
+            <sidn-ext-epp:ext>
+              <sidn-ext-epp:response/>
+            </sidn-ext-epp:ext>
+          </extension>
+          <trID>
+            <clTRID>ABC-12345</clTRID>
+            <svTRID>100031</svTRID>
+          </trID>
+        </sidn-ext-epp:data>
+      </sidn-ext-epp:pollData>
+    </resData>
+    <trID>
+      <clTRID>500100-302</clTRID>
+      <svTRID>F57DC47E-EC1B-14B8-D672-4C7100C1A892</svTRID>
+    </trID>
+  </response>
+</epp>
+Domain transfer (op = “approve”)
+Voorbeeld EPP commando
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <command>
+    <transfer op="approve">
+      <domain:transfer
+       xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+        <domain:name>domaintransfer36.nl</domain:name>
+      </domain:transfer>
+    </transfer>
+    <clTRID>GLVDC10T10</clTRID>
+  </command>
+</epp>
+Voorbeeld response bericht succes
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+  <response>
+    <result code="1000">
+      <msg>Transfer of the domain name has been approved.</msg>
+    </result>
+    <resData>
+      <domain:trnData>
+        <domain:name>domaintransfer36.nl</domain:name>
+        <domain:trStatus>pending</domain:trStatus>
+        <domain:reID>104000</domain:reID>
+        <domain:reDate>2009-10-29T10:54:28.000Z</domain:reDate>
+        <domain:acID>102000</domain:acID>
+        <domain:acDate>2009-11-03T10:54:28.000Z</domain:acDate>
+      </domain:trnData>
+    </resData>
+    <trID>
+      <clTRID>GLVDC10T10</clTRID>
+      <svTRID>100001</svTRID>
+    </trID>
+  </response>
+</epp>
+
+Domain transfer token reminder
+Voorbeeld response bericht
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <response>
+    <result code="1000">
+      <msg>Transfer token issue reminder.</msg>
+    </result>
+    <extension>
+      <sidn-ext-epp:ext>
+        <sidn-ext-epp:trnData>
+          <sidn-ext-epp:domainname>domaintransfer36.nl</sidn-ext-epp:domainname>
+          <sidn-ext-epp:requestor>Test registrar</sidn-ext-epp:requestor>
+          <sidn-ext-epp:requestDate>2009-10-08T10:34:32.000Z</sidn-ext-epp:requestDate>
+          <sidn-ext-epp:supplyDate>2009-10-08T10:34:32.000Z</sidn-ext-epp:supplyDate>
+        </sidn-ext-epp:trnData>
+      </sidn-ext-epp:ext>
+    </extension>
+    <trID>
+      <svTRID>5BF24F8C-9D47-F2C6-7F74-2895EF2C2539</svTRID>
+    </trID>
+  </response>
+</epp>
+Domain transfer token supply
+Voorbeeld response bericht
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:domain="urn:ietf:params:xml:ns:domain-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <response>
+    <result code="1000">
+      <msg>The issue of a token has been considered and a token has been issued.</msg>
+    </result>
+    <extension>
+      <sidn-ext-epp:ext>
+       <sidn-ext-epp:trnData>
+          <sidn-ext-epp:pw>pass123</sidn-ext-epp:pw>
+          <sidn-ext-epp:domainname>domaintransfer36.nl</sidn-ext-epp:domainname>
+          <sidn-ext-epp:requestDate>2009-10-08T10:34:32.000Z</sidn-ext-epp:requestDate>
+        </sidn-ext-epp:trnData>
+      </sidn-ext-epp:ext>
+    </extension>
+    <trID>
+      <svTRID>5BF24F8C-9D47-F2C6-7F74-2895EF2C2539</svTRID>
+    </trID>
+  </response>
+</epp>
+Contact check
+Voorbeeld EPP commando
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <command>
+    <check>
+      <contact:check
+        xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
+        <contact:id>TST000501-DWDNR</contact:id>
+      </contact:check> 
+   	 </check>
+    <clTRID>ABC-12345</clTRID>
+  </command>
+</epp>
+Voorbeeld response bericht succes
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
+  <response>
+    <result code="1000">
+      <msg>The availability of the contact person has been checked.</msg>
+    </result>
+    <resData>
+      <contact:chkData>
+        <contact:cd>
+          <contact:id avail="false">TST000501-DWDNR</contact:id>
+        </contact:cd>
+      </contact:chkData>
+    </resData>
+    <trID>
+      <clTRID>ABC-12345</clTRID>
+      <svTRID>DA18E6F6-D725-5453-D8FF-043D8DC33DE9</svTRID>
+    </trID>
+  </response>
+</epp>
+Voorbeeld response bericht fout
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <response>
+    <result code="2400">
+      <msg>Validation of the transaction failed.</msg>
+    </result>
+    <extension>
+      <sidn-ext-epp:ext>
+        <sidn-ext-epp:response>
+          <sidn-ext-epp:msg field="" code="C0115">De opgegeven handle is niet van de registrar.</sidn-ext-epp:msg>
+        </sidn-ext-epp:response>
+      </sidn-ext-epp:ext>
+    </extension>
+    <trID>
+      <clTRID>ABC-12345</clTRID>
+      <svTRID>0ACC9F81-11F9-5B1F-84C4-8F03D78081F7</svTRID>
+    </trID>
+  </response>
+</epp>
+Contact info
+Voorbeeld EPP commando
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <command>
+    <info>
+      <contact:info
+       xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
+        <contact:id>TST000033-DEMEE</contact:id>
+      </contact:info>
+    </info>
+    <clTRID>ABC-12345</clTRID>
+  </command>
+</epp>
+Voorbeeld response bericht succes
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:contact="urn:ietf:params:xml:ns:contact-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <response>
+    <result code="1000">
+      <msg>The contact person has been queried.</msg>
+    </result>
+    <resData>
+      <contact:infData>
+        <contact:id>TST000033-DEMEE</contact:id>
+        <contact:roid>CPN_100134-SIDN</contact:roid>
+        <contact:status s="pendingUpdate">linked, limited, pendingUpdate</contact:status>
+        <contact:postalInfo type="loc">
+          <contact:name>Jan Otten</contact:name>
+          <contact:addr>
+            <contact:street>Hoofdstraat 126</contact:street>
+            <contact:city>Eindhoven</contact:city>
+            <contact:pc>4444EE</contact:pc>
+            <contact:cc>NL</contact:cc>
+          </contact:addr>
+        </contact:postalInfo>
+        <contact:voice>+31.0612345678</contact:voice>
+        <contact:email>otten@sidn.nl</contact:email>
+        <contact:clID>DEMEE</contact:clID>
+        <contact:crID>DEMEE</contact:crID>
+        <contact:crDate>2009-01-02T00:00:00.000Z</contact:crDate>
+      </contact:infData>
+    </resData>
+    <extension>
+      <sidn-ext-epp:ext>
+        <sidn-ext-epp:infData>
+          <sidn-ext-epp:contact>
+            <sidn-ext-epp:legalForm>EENMANSZAAK</sidn-ext-epp:legalForm>
+            <sidn-ext-epp:legalFormRegNo>8764654.0</sidn-ext-epp:legalFormRegNo>
+            <sidn-ext-epp:limited>true</sidn-ext-epp:limited>
+          </sidn-ext-epp:contact>
+        </sidn-ext-epp:infData>
+      </sidn-ext-epp:ext>
+    </extension>
+    <trID>
+      <clTRID>ABC-12345</clTRID>
+      <svTRID>9B7E2F55-EABA-C6AA-5A6F-A2FBA366A2FE</svTRID>
+    </trID>
+  </response>
+</epp>
+Voorbeeld response bericht fout
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <response>
+    <result code="2303">
+      <msg>The specified contact person is unknown.</msg>
+    </result>
+    <extension>
+      <sidn-ext-epp:ext>
+        <sidn-ext-epp:response>
+          <sidn-ext-epp:msg field="handle" code="F0001">Waarde voldoet niet aan de expressie: [A-Z]{3}[0-9]{6}[-][A-Z0-9]{5}.</sidn-ext-epp:msg>
+          <sidn-ext-epp:msg field="handle" code="T0002">De opgegeven handle is onbekend.</sidn-ext-epp:msg>
+        </sidn-ext-epp:response>
+      </sidn-ext-epp:ext>
+    </extension>
+    <trID>
+      <clTRID>ABC-12345</clTRID>
+      <svTRID>658AF732-4475-C853-02E0-36282FAD9E5D</svTRID>
+    </trID>
+  </response>
+</epp>
+Contact create
+Voorbeeld EPP commando
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <command>
+    <create>
+      <contact:create
+       xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
+        <contact:id>sh8013</contact:id>
+        <contact:postalInfo type="loc">
+          <contact:name>Harry Jansen BV</contact:name>
+          <contact:org>afdeling communicatie</contact:org>
+          <contact:addr>
+            <contact:street>IJsselkade</contact:street>
+            <contact:street>100</contact:street>
+            <contact:city>Amsterdam</contact:city>
+            <contact:sp>Noord-Holland</contact:sp>
+            <contact:pc>1234AA</contact:pc>
+            <contact:cc>NL</contact:cc>
+          </contact:addr>
+        </contact:postalInfo>      
+        <contact:voice>+31.612345678</contact:voice>
+        <contact:fax>+31.204578274</contact:fax>
+        <contact:email>epptestteam@sidn.nl</contact:email>
+        <contact:authInfo>
+          <contact:pw>2fooBAR</contact:pw>
+        </contact:authInfo>
+      </contact:create>
+    </create>
+    <extension>
+      <sidn-ext-epp:ext>
+        <sidn-ext-epp:create>
+          <sidn-ext-epp:contact>
+            <sidn-ext-epp:legalForm>BV</sidn-ext-epp:legalForm>
+            <sidn-ext-epp:legalFormRegNo>8764654.0</sidn-ext-epp:legalFormRegNo>
+          </sidn-ext-epp:contact>
+        </sidn-ext-epp:create>
+      </sidn-ext-epp:ext>
+    </extension>
+  <clTRID>ABC-12345</clTRID>
+  </command>
+</epp>
+Voorbeeld response bericht succes
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
+  <response>
+    <result code="1000">
+      <msg>The contact person has been registered.</msg>
+    </result>
+    <resData>
+      <contact:creData>
+        <contact:id>HAN000002-TS104</contact:id>
+        <contact:crDate>2009-10-23T09:24:48.000Z</contact:crDate>
+      </contact:creData>
+    </resData>
+    <trID>
+      <clTRID>ABC-12345</clTRID>
+      <svTRID>100030</svTRID>
+    </trID>
+  </response>
+</epp>
+Contact update
+Voorbeeld EPP commando
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <command>
+    <update>
+    <contact:update
+     xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
+      <contact:id>TEA000031-GOEDA</contact:id>
+        <contact:chg>
+          <contact:postalInfo type="loc">
+            <contact:name>Herman de Vries</contact:name>
+            <contact:org>SIDN</contact:org>
+            <contact:addr>
+              <contact:street>Street 1</contact:street>
+              <contact:street>Street 2</contact:street>
+              <contact:street>Street 3</contact:street>
+              <contact:city>Arnhem</contact:city>
+              <contact:pc>1000AA</contact:pc>
+              <contact:cc>NL</contact:cc>
+            </contact:addr>
+          </contact:postalInfo>
+          <contact:voice>+31.207654321</contact:voice>
+          <contact:fax>+31.201234567</contact:fax>
+          <contact:email>herman@epptestdomein.nl</contact:email>
+        </contact:chg>   
+      </contact:update>
+    </update>
+    <clTRID>ABC-12345</clTRID>
+  </command>
+</epp>
+Voorbeeld EPP commando met rechtsvorm extensie voor natuurlijk persoon
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0"  xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <command>
+    <update>
+    <contact:update
+     xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
+     <contact:id>TEA000031-GOEDA</contact:id>
+      <contact:chg>
+       <contact:postalInfo type="loc">
+         <contact:name>Herman Jansen</contact:name>
+          <contact:org>SIDN</contact:org>
+           <contact:addr>
+            <contact:street>Street 1</contact:street>
+            <contact:street>Street 2</contact:street>
+            <contact:street>Street 3</contact:street>
+            <contact:city>Amsterdam</contact:city>
+             <contact:pc>1000AA</contact:pc>
+             <contact:cc>NL</contact:cc>
+           </contact:addr>
+          </contact:postalInfo>
+          <contact:voice>+31.207654321</contact:voice>
+          <contact:fax>+31.201234567</contact:fax>
+          <contact:email>herman@epptestdomein.nl</contact:email>
+       </contact:chg>   
+     </contact:update>
+    </update>
+    <extension>
+    <sidn-ext-epp:ext>
+      <sidn-ext-epp:update>
+        <sidn-ext-epp:contact>
+          <sidn-ext-epp:legalForm>PERSOON</sidn-ext-epp:legalForm>
+        </sidn-ext-epp:contact>
+      </sidn-ext-epp:update>
+    </sidn-ext-epp:ext>
+  </extension>
+  <clTRID>ABC-12345</clTRID>
+  </command>
+</epp>
+Voorbeeld response bericht succes
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <response>
+    <result code="1000">
+      <msg>The contact person has been changed without consideration.</msg>
+    </result>
+    <trID>
+      <clTRID>ABC-12345</clTRID>
+      <svTRID>100006</svTRID>
+    </trID>
+  </response>
+</epp>
+Contact delete
+Voorbeeld EPP commando
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <command>
+    <delete>
+      <contact:delete xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
+        <contact:id>TST000637-DWDNR</contact:id>
+      </contact:delete>
+    </delete>
+    <clTRID>500100-502</clTRID>
+  </command>
+</epp>
+Voorbeeld response bericht succes
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <response>
+    <result code="1000">
+      <msg>The contact person has been deleted.</msg>
+    </result>
+    <trID>
+      <clTRID>500100-502</clTRID>
+      <svTRID>100015</svTRID>
+    </trID>
+  </response>
+</epp>
+Voorbeeld response bericht fout
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <response>
+    <result code="2305">
+      <msg>The contact person cannot be deleted because the person is still associated with a domain name.</msg>
+    </result>
+    <extension>
+      <sidn-ext-epp:ext>
+        <sidn-ext-epp:response>
+          <sidn-ext-epp:msg field="" code="C0079b">Contactpersoon mag niet verwijderd worden omdat deze nog gelinkt is aan een domeinnaam.</sidn-ext-epp:msg>
+        </sidn-ext-epp:response>
+      </sidn-ext-epp:ext>
+    </extension>
+    <trID>
+      <clTRID>500100-502</clTRID>
+      <svTRID>100039</svTRID>
+    </trID>
+  </response>
+</epp>
+Host check
+Voorbeeld EPP commando
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <command>
+    <check>
+      <host:check
+       xmlns:host="urn:ietf:params:xml:ns:host-1.0">
+        <host:name>NS1.CHECKHOST.NL</host:name>
+        <host:name>ns2.checkhost.nl</host:name>
+        <host:name>NS3.checkhost.nl</host:name>
+        <host:name>ns4.checkhost.nl</host:name>
+        <host:name>ns5.CHECKHOST.nl</host:name>
+        <host:name>NS6.CHECKHOST.NL</host:name>
+        <host:name>ns7.checkhost.nl</host:name>
+        <host:name>NS8.checkhost.NL</host:name>
+        <host:name>ns9.checkhost.nl</host:name>
+        <host:name>ns10.checkhost.nl</host:name>
+      </host:check>
+    </check>
+    <clTRID>HOSTCHECK-DLNTICKET</clTRID>
+  </command>
+</epp>
+Voorbeeld response bericht succes
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:host="urn:ietf:params:xml:ns:host-1.0">
+  <response>
+    <result code="1000">
+      <msg>The availability of the name server has been checked.</msg>
+    </result>
+    <resData>
+      <host:chkData>
+        <host:cd>
+          <host:name avail="false">ns1.checkhost.nl</host:name>
+        </host:cd>
+        <host:cd>
+          <host:name avail="false">ns2.checkhost.nl</host:name>
+        </host:cd>
+        <host:cd>
+          <host:name avail="false">ns3.checkhost.nl</host:name>
+        </host:cd>
+        <host:cd>
+          <host:name avail="false">ns4.checkhost.nl</host:name>
+        </host:cd>
+        <host:cd>
+          <host:name avail="false">ns5.checkhost.nl</host:name>
+        </host:cd>
+        <host:cd>
+          <host:name avail="true">ns6.checkhost.nl</host:name>
+        </host:cd>
+        <host:cd>
+          <host:name avail="true">ns7.checkhost.nl</host:name>
+        </host:cd>
+        <host:cd>
+          <host:name avail="true">ns8.checkhost.nl</host:name>
+        </host:cd>
+        <host:cd>
+          <host:name avail="true">ns9.checkhost.nl</host:name>
+        </host:cd>
+        <host:cd>
+          <host:name avail="true">ns10.checkhost.nl</host:name>
+        </host:cd>
+      </host:chkData>
+    </resData>
+    <trID>
+      <clTRID>HOSTCHECK-DLNTICKET</clTRID>
+      <svTRID>283B8DAC-DD5F-1F0E-CC47-CF87E06A9BE6</svTRID>
+    </trID>
+  </response>
+</epp>
+Host info
+Voorbeeld EPP commando
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+	<command>
+		<info>
+			<host:info xmlns:host="urn:ietf:params:xml:ns:host-1.0">
+				<host:name>ns1.domain100.nl</host:name>
+			</host:info>
+		</info>
+		<clTRID>ABC-12345</clTRID>
+	</command>
+</epp>
+Voorbeeld response bericht succes
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:host="urn:ietf:params:xml:ns:host-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <response>
+    <result code="1000">
+      <msg>The name server has been queried.</msg>
+    </result>
+    <resData>
+      <host:infData>
+        <host:name>ns1.domain100.nl</host:name>
+        <host:roid>NSR_100-SIDN</host:roid>
+        <host:status s="ok"/>
+        <host:addr ip="v4">1.2.3.0</host:addr>
+        <host:clID>REGIS</host:clID>
+        <host:crID>REGIS</host:crID>
+        <host:crDate>2009-06-10T00:00:00.000Z</host:crDate>
+        <host:upID>100000</host:upID>
+        <host:upDate>2009-06-12T00:00:00.000Z</host:upDate>        
+      </host:infData>
+    </resData>
+    <extension>
+      <sidn-ext-epp:ext>
+        <sidn-ext-epp:infData>
+          <sidn-ext-epp:host>
+            <sidn-ext-epp:limited>false</sidn-ext-epp:limited>
+          </sidn-ext-epp:host>
+        </sidn-ext-epp:infData>
+      </sidn-ext-epp:ext>
+    </extension>
+    <trID>
+      <clTRID>ABC-12345</clTRID>
+      <svTRID>7057BC48-18A0-0BB5-6618-7247AA67F51D</svTRID>
+    </trID>
+  </response>
+</epp>
+Host create
+Voorbeeld EPP commando
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <command>
+    <create>
+      <host:create
+       xmlns:host="urn:ietf:params:xml:ns:host-1.0">
+        <host:name>HOSTCREATE-10IP.jaap.nl</host:name>
+        <host:addr ip="v4">201.11.12.13</host:addr>
+        <host:addr ip="v4">202.11.12.13</host:addr>
+        <host:addr ip="v4">203.11.12.13</host:addr>
+        <host:addr ip="v4">204.11.12.13</host:addr>
+        <host:addr ip="v4">205.11.12.13</host:addr>
+        <host:addr ip="v4">206.11.12.13</host:addr>
+        <host:addr ip="v4">207.11.12.13</host:addr>
+        <host:addr ip="v4">208.11.12.13</host:addr>
+        <host:addr ip="v4">209.11.12.13</host:addr>
+        <host:addr ip="v4">210.11.12.13</host:addr>
+      </host:create>
+    </create>
+    <clTRID>HOSTCREATE-10IP</clTRID>
+  </command>
+</epp>
+Voorbeeld response bericht succes
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:host="urn:ietf:params:xml:ns:host-1.0">
+  <response>
+    <result code="1000">
+      <msg>The name server has been registered.</msg>
+    </result>
+    <resData>
+      <host:creData>
+        <host:name>hostcreate-10ip.jaap.nl</host:name>
+        <host:crDate>2009-10-23T09:30:29.000Z</host:crDate>
+      </host:creData>
+    </resData>
+    <trID>
+      <clTRID>HOSTCREATE-10IP</clTRID>
+      <svTRID>100033</svTRID>
+    </trID>
+  </response>
+</epp>
+Voorbeeld response bericht fout
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <response>
+    <result code="2400">
+      <msg>Validation of the transaction failed.</msg>
+    </result>
+    <extension>
+      <sidn-ext-epp:ext>
+        <sidn-ext-epp:response>
+          <sidn-ext-epp:msg field="Name" code="C0089">Geen superordinate domeinnaam bij ingevoerde nameserver gevonden.</sidn-ext-epp:msg>
+        </sidn-ext-epp:response>
+      </sidn-ext-epp:ext>
+    </extension>
+    <trID>
+      <clTRID>HOSTCREATE-C0089</clTRID>
+      <svTRID>100034</svTRID>
+    </trID>
+  </response>
+</epp>
+Host update
+Voorbeeld EPP commando
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <command>
+    <update>
+      <host:update
+       xmlns:host="urn:ietf:params:xml:ns:host-1.0">
+        <host:name>ns1.domain100.nl</host:name>
+        <host:add>
+          <host:addr ip="v4">111.112.113.110</host:addr>
+        </host:add>
+      </host:update>
+    </update>
+    <clTRID>TestWZNMC10T50</clTRID>
+  </command>
+</epp>
+Voorbeeld response bericht succes
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <response>
+    <result code="1000">
+      <msg>The name server has been changed without consideration.</msg>
+    </result>
+    <trID>
+      <clTRID>TestWZNMC10T50</clTRID>
+      <svTRID>100012</svTRID>
+    </trID>
+  </response>
+</epp>
+Voorbeeld response bericht fout
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <response>
+    <result code="2303">
+      <msg>The specified name server is unknown.</msg>
+    </result>
+    <extension>
+      <sidn-ext-epp:ext>
+        <sidn-ext-epp:response>
+          <sidn-ext-epp:msg field="Naam" code="T0008">De opgegeven nameserver is onbekend.</sidn-ext-epp:msg>
+        </sidn-ext-epp:response>
+      </sidn-ext-epp:ext>
+    </extension>
+    <trID>
+      <clTRID>TestWZNMC10T40</clTRID>
+      <svTRID>100011</svTRID>
+    </trID>
+  </response>
+</epp>
+Host delete
+Voorbeeld EPP commando
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+   <command>
+     <delete>
+       <host:delete xmlns:host="urn:ietf:params:xml:ns:host-1.0">
+		  <host:name>ns10.domain100.nl</host:name>
+		</host:delete>
+     </delete>
+     <clTRID>TestVWDNC10T20</clTRID>
+   </command>
+</epp>
+Voorbeeld response bericht succes
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <response>
+    <result code="1000">
+      <msg>The name server has been deleted.</msg>
+    </result>
+    <trID>
+      <clTRID>TestVWDNC10T20</clTRID>
+      <svTRID>100046</svTRID>
+    </trID>
+  </response>
+</epp>
+Voorbeeld response bericht fout
+<?xml version="1.0" encoding="utf-8"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0">
+  <response>
+    <result code="2303">
+      <msg>The specified name server is unknown.</msg>
+    </result>
+    <extension>
+      <sidn-ext-epp:ext>
+        <sidn-ext-epp:response>
+          <sidn-ext-epp:msg field="Naam" code="T0008">De opgegeven nameserver is onbekend.</sidn-ext-epp:msg>
+        </sidn-ext-epp:response>
+      </sidn-ext-epp:ext>
+    </extension>
+    <trID>
+      <clTRID>TestVWDNC10T20</clTRID>
+      <svTRID>100047</svTRID>
+    </trID>
+  </response>
+</epp>

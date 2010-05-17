@@ -15,6 +15,11 @@
           schemaLocation="eppcom-1.0.xsd"/>
   <import namespace="urn:ietf:params:xml:ns:epp-1.0"
           schemaLocation="epp-1.0.xsd"/>
+  <import namespace="urn:ietf:params:xml:ns:host-1.0"
+          schemaLocation="host-1.0.xsd"/>
+  <import namespace="urn:ietf:params:xml:ns:domain-1.0"
+          schemaLocation="domain-1.0.xsd"/>
+
 
   <!-- Extensions on existing commands -->
   <element name="ext" type="sidn:extType"/>

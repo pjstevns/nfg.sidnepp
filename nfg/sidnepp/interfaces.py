@@ -7,9 +7,6 @@ class IEpp(Interface):
     host = Attribute(""" remote EPP server we want to connect to""")
     port = Attribute(""" remote EPP port we want to connect to""")
 
-    def hello():
-        """ start session """
-
     def login(login, password, newpassword=None, lang='NL'):
         """ initialize session, and optionaly set new password """
 
