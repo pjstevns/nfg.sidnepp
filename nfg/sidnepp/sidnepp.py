@@ -21,16 +21,20 @@ STATE_LOGGEDIN  = 0x08
 
 DEBUG=1
 
+testserver = 'testdrs.domain-registry.nl'
+testport   = 700
+testuser   = '300271'
+testpass   = 'c2155d6292'
+
+
 def debug(msg=None):
     if msg and DEBUG: print msg
 
 class SIDNEppProtocol(object):
 
     def __init__(self):
-        xsd = os.path.join(os.path.dirname(__file__), 'sidn-ext-epp-1.0.xsd')
-        schema_root = etree.parse(open(xsd,'r'))
-        schema = etree.XMLSchema(schema_root)
-        self.parser = etree.XMLParser(schema=schema)
+        xsd = os.path.join(os.path.dirname(__file__), 'xsd', 'sidn-ext-epp-1.0.xsd')
+        self.parser = etree.XMLParser(schema=etree.XMLSchema(etree.parse(open(xsd,'r'))))
 
     def parse(self, message):
         return etree.fromstring(message, self.parser)
@@ -39,9 +43,9 @@ class SIDNEppProtocol(object):
         return element.xpath(query, 
                              namespaces={
                                  'epp': 'urn:ietf:params:xml:ns:epp-1.0',
-                                 'contact':'urn:ietf:params:xml:ns:contact-1.0',
                                  'host': 'urn:ietf:params:xml:ns:host-1.0',
                                  'domain': 'urn:ietf:params:xml:ns:domain-1.0',
+                                 'contact':'urn:ietf:params:xml:ns:contact-1.0',
                                  'ext': 'urn:ietf:params:xml:ns:sidn-ext-epp-1.0',
                              })
 
@@ -179,7 +183,7 @@ class SIDNEppProxy(SIDNEppClient):
 
 from SocketServer import TCPServer, BaseRequestHandler
 
-class EppHandler(BaseRequestHandler, SIDNEppProtocol):
+class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
     def handle(self):
         message = self.read()
         self.write(message)
@@ -199,11 +203,33 @@ class EppHandler(BaseRequestHandler, SIDNEppProtocol):
         self.request.send(message)
 
 
-class SIDNEppProxyServer(object):
-    pass
- 
+class SIDNEppProxyServer(TCPServer):
+
+    def __init__(self, (host, port), handler=None):
+        """
+        >>> s = SIDNEppProxyServer(('127.0.0.1',7000))
+        >>> s
+        <__main__.SIDNEppProxyServer instance at 0x...>
+
+        >>> s.timeout=1
+        >>> s.handle_request()
+        Traceback (most recent call last):
+        ...
+        IOError: request timeout
+        """
+        if not handler: handler=SIDNEppProxyHandler
+        TCPServer.__init__(self, (host, port), handler)
+
+    def login(self, remote_host, remote_port):
+        """ setup connection to remote EPP service 
+        >>> s = SIDNEppProxyServer(('127.0.0.1',7000))
+        >>> s.login(testserver,testport,testuser,testpass)
+        """
+
+    def handle_timeout(self):
+        raise IOError("request timeout")
 
 if __name__ == '__main__':
     import doctest
-    doctest.testmod()
+    doctest.testmod(optionflags=doctest.ELLIPSIS)
 
