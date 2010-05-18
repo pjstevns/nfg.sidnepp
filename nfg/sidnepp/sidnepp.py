@@ -54,6 +54,10 @@ class SIDNEppClient(SIDNEppProtocol):
     implements(IEpp)
 
     _connection_State = STATE_INIT
+    
+    # server frames
+    _greeting = None
+    _login = None
 
     def __init__(self, host=None, port=None, username=None, password=None):
         super(SIDNEppClient, self).__init__()
@@ -61,7 +65,7 @@ class SIDNEppClient(SIDNEppProtocol):
         self.port = port
         self.connect()
         self._greeting = self.hello()
-        self.login(username, password)
+        self._login = self.login(username, password)
 
     def connect(self):
         assert(self._connection_State == STATE_INIT) 
@@ -204,27 +208,36 @@ class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
 
 
 class SIDNEppProxyServer(TCPServer):
+    """
+    >>> s = SIDNEppProxyServer(('127.0.0.1',7000))
+    >>> s
+    <__main__.SIDNEppProxyServer instance at 0x...>
+
+    >>> s.timeout=.1
+    >>> s.handle_request()
+    Traceback (most recent call last):
+    ...
+    IOError: request timeout
+
+    >>> s.login(testserver,testport,testuser,testpass)
+    <Element {urn:ietf:params:xml:ns:epp-1.0}epp at ...>
+
+    """
+
+    server = None
 
     def __init__(self, (host, port), handler=None):
-        """
-        >>> s = SIDNEppProxyServer(('127.0.0.1',7000))
-        >>> s
-        <__main__.SIDNEppProxyServer instance at 0x...>
-
-        >>> s.timeout=1
-        >>> s.handle_request()
-        Traceback (most recent call last):
-        ...
-        IOError: request timeout
-        """
         if not handler: handler=SIDNEppProxyHandler
         TCPServer.__init__(self, (host, port), handler)
 
-    def login(self, remote_host, remote_port):
+    def login(self, remote_host, remote_port, username, password):
         """ setup connection to remote EPP service 
-        >>> s = SIDNEppProxyServer(('127.0.0.1',7000))
-        >>> s.login(testserver,testport,testuser,testpass)
         """
+        self.server = SIDNEppClient(remote_host, 
+                                    remote_port, 
+                                    username,
+                                    password)
+        return self.server._login
 
     def handle_timeout(self):
         raise IOError("request timeout")
