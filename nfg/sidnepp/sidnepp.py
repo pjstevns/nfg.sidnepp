@@ -59,19 +59,25 @@ class SIDNEppClient(SIDNEppProtocol):
     _greeting = None
     _login = None
 
-    def __init__(self, host=None, port=None, username=None, password=None):
+    def __init__(self, host=None, port=None, username=None, password=None,
+                 ssl=True):
         super(SIDNEppClient, self).__init__()
         self.host = host
         self.port = port
+        self.ssl = ssl
         self.connect()
-        self._greeting = self.hello()
-        self._login = self.login(username, password)
+        if username and password:
+            self._greeting = self.hello()
+            self._login = self.login(username, password)
 
     def connect(self):
         assert(self._connection_State == STATE_INIT) 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((self.host, self.port))
-        self._fd = ssl.wrap_socket(s)
+        if self.ssl:
+            self._fd = ssl.wrap_socket(s)
+        else:
+            self._fd = s
         self._connection_State = STATE_CONNECTED
 
     def write(self, message):
@@ -80,15 +86,15 @@ class SIDNEppClient(SIDNEppProtocol):
         self.parse(message)
         l = len(message)+4
         data = struct.pack(">L", l)
-        self._fd.write(data)
-        self._fd.write(message)
+        self._fd.send(data)
+        self._fd.send(message)
         return self.read()
 
     def read(self):
-        buf = self._fd.read(4)
+        buf = self._fd.recv(4)
         need = struct.unpack(">L", buf)
         need = need[0]-4
-        message = self._fd.read(need)
+        message = self._fd.recv(need)
         return self.parse(message)
 
     def hello(self):
@@ -189,14 +195,16 @@ from SocketServer import TCPServer, BaseRequestHandler
 
 class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
     def handle(self):
-        message = self.read()
-        self.write(message)
+        # first read the incoming message from the client
+        # write this message to the server
+        # post back the reply to the client
+        self.write(self.server.server.write(self.read()))
 
     def read(self):
         buf = self.request.recv(4)
         need = struct.unpack(">L", buf)
         need = need[0]-4
-        message = self.request.recv.recv(need)
+        message = self.request.recv(need)
         return self.parse(message)
 
     def write(self, message):
@@ -224,6 +232,7 @@ class SIDNEppProxyServer(TCPServer):
 
     """
 
+    # the remote EPP server connection
     server = None
 
     def __init__(self, (host, port), handler=None):
@@ -242,7 +251,27 @@ class SIDNEppProxyServer(TCPServer):
     def handle_timeout(self):
         raise IOError("request timeout")
 
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(optionflags=doctest.ELLIPSIS)
 
+if __name__ == '__main__':
+    import sys, time
+    #import doctest
+    #doctest.testmod(optionflags=doctest.ELLIPSIS)
+    pid = os.fork()
+    if pid:
+        print "parent"
+        proxy = SIDNEppProxyServer(('127.0.0.1',7000))
+        proxy.login(testserver, testport, testuser, testpass)
+        while 1:
+            check = os.waitpid(pid,os.WNOHANG)
+            if check != (0,0):
+                print check
+                break
+            proxy.handle_request()
+        print "parent done"
+    else:
+        print "child"
+        client = SIDNEppClient('localhost', 7000, ssl=False)
+        #client.hello()
+        time.sleep(2)
+        print "child done"
+        sys.exit(0)
