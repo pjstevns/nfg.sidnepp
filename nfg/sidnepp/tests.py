@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 
-from sidnepp import SIDNEppClient
+from sidnepp import SIDNEppProtocol
 from lxml import etree
 
 import unittest
@@ -12,7 +12,7 @@ testpass='c2155d6292'
 class testSidnEPP(unittest.TestCase):
 
     def setUp(self):
-        pass
+        self.o = SIDNEppProtocol()
 
 #    def tearDown(self):
 #        try:
@@ -43,11 +43,13 @@ class testSidnEPP(unittest.TestCase):
         </command>
         </epp>"""
 
-#        e = etree.fromstring(xml, self.o.parser)
-#        r1 = e.xpath('//epp:command', namespaces={'epp':"urn:ietf:params:xml:ns:epp-1.0"})
-#        self.failUnless(len(r1) == 1)
-#        r2 = self.o.query(e, "//epp:command")
-#        self.failUnless(r1 == r2)
+        e = etree.fromstring(xml, self.o.parser)
+        r1 = e.xpath('//epp:command', namespaces={'epp':"urn:ietf:params:xml:ns:epp-1.0"})
+        self.failUnless(len(r1) == 1)
+        r2 = self.o.query(e, "//epp:command")
+        self.failUnless(r1 == r2)
+        r3 = self.o.query(e,"//epp:login")
+        self.failUnless(type(r3) == type(r2))
 
 #    def testLogin(self):
 #        s = self.o.login(testuser, testpass)

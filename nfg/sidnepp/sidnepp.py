@@ -56,8 +56,8 @@ class SIDNEppClient(SIDNEppProtocol):
     _connection_State = STATE_INIT
     
     # server frames
-    _greeting = []
-    _login = []
+    _greeting = None
+    _login = None
 
     def __init__(self, host=None, port=None, username=None, password=None,
                  ssl=True):
@@ -93,14 +93,10 @@ class SIDNEppClient(SIDNEppProtocol):
         return self.read()
 
     def read(self):
-        r = []
-        while 1:
-            buf = self._fd.recv(4)
-            if not buf: return r
-            need = struct.unpack(">L", buf)
-            need = need[0]-4
-            r.append(self.parse(self._fd.recv(need)))
-        return r
+        buf = self._fd.recv(4)
+        need = struct.unpack(">L", buf)
+        need = need[0]-4
+        return self.parse(self._fd.recv(need))
 
     def getState(self):
         return self._connection_State
@@ -112,9 +108,10 @@ class SIDNEppClient(SIDNEppProtocol):
         <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
           <hello/>
         </epp>"""
-        self._greeting = self.write(xml)
+        result = self.write(xml)
+        assert(self.query(result,"//epp:greeting"))
         self._connection_State = STATE_SESSION
-        return self._greeting
+        return result
 
     def login(self, login, password, newpassword=None, lang='NL'):
         assert(self._connection_State == STATE_SESSION)
@@ -140,10 +137,13 @@ class SIDNEppClient(SIDNEppProtocol):
         </command>
         </epp>  
         """ % (login, password, lang)
-        self._login.append(self.write(xml))
-        self._login.append(self.read())
+        result = self.write(xml)
+        r = self.query(result, "//epp:result")
+        if not r:
+            result = self.read()
+            r = self.query(result, "//epp:result")
         self._connection_State = STATE_LOGGEDIN
-        return self._login[1]
+        return result
 
     def logout(self):
         assert(self._connection_State == STATE_LOGGEDIN) 
@@ -200,35 +200,98 @@ class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
         SIDNEppProtocol.__init__(self)
         # first read the incoming message from the client
         req = self.read()
+        print "handle", self.client_address[0], req
         if self.query(req,'//epp:hello'):
-            self.write(self.server.server._greeting)
-        elif self.query(req,'//epp:command/login'):
-            self.write(self.server.server._login)
+            xml = """<?xml version="1.0" encoding="UTF-8"?>
+            <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+            <greeting>
+            <svID>drs.domain-registry.nl</svID>
+            <svDate>2008-12-03T14:00:17.372Z</svDate>
+            <svcMenu>
+            <version>1.0</version>
+            <lang>en</lang>
+            <lang>nl</lang>
+            <objURI>urn:ietf:params:xml:ns:contact-1.0</objURI>
+            <objURI>urn:ietf:params:xml:ns:domain-1.0</objURI>
+            <objURI>urn:ietf:params:xml:ns:host-1.0</objURI>
+            <svcExtension>
+            <extURI>http://rxsd.domain-registry.nl/sidn-ext-epp-1.0</extURI>
+            </svcExtension>
+            </svcMenu>
+            <dcp>
+            <access>
+            <all/>
+            </access>
+            <statement>
+            <purpose>
+            <admin/>
+            <prov/>
+            </purpose>
+            <recipient>
+            <ours/>
+            <public/>
+            </recipient>
+            <retention>
+            <stated/>
+            </retention>
+            </statement>
+            </dcp>
+            </greeting>
+            </epp>
+            """
+            print "handle hello"
+            self.write(xml)
+        elif self.query(req,'//epp:login'):
+            print "handle login"
+            xml = """<?xml version="1.0" encoding="utf-8"?>
+            <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+            <response>
+            <result code="1000">
+            <msg>The transaction was completed successfully.</msg>
+            </result>
+            <trID>
+            <clTRID></clTRID>
+            <svTRID></svTRID>
+            </trID>
+            </response>
+            </epp>
+            """
+            #self.write(self.server.server._login)
+        elif self.query(req, '//epp:logout'):
+            print "handle logout"
+            xml = """<?xml version="1.0" encoding="UTF-8"?>
+            <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+            <response>
+            <result code="1500">
+            <msg>You are now logged off.</msg>
+            </result>
+            <trID>
+            <svTRID></svTRID>
+            </trID>
+            </response>
+            </epp>
+            """
+            #self.write(xml)
         else:
-            print self.server.server.getState(), req
+            print "Oops", req
             # write this message to the server
             #rep = self.server.server.write(req)
             # post back the reply to the client
             #self.write(rep)
 
     def read(self):
-        r = []
-        while 1:
-            buf = self.request.recv(4)
-            if not buf: return r
-            need = struct.unpack(">L", buf)
-            need = need[0]-4
-            r.append(self.parse(self.request.recv(need)))
-        return r
+        buf = self.request.recv(4)
+        need = struct.unpack(">L", buf)
+        need = need[0]-4
+        return self.parse(self.request.recv(need))
 
-    def write(self, frames):
-        for message in frames:
-            print "handler.write", self.request, len(message)
-            self.parse(message)
-            l = len(message)+4
-            data = struct.pack(">L", l)
-            self.request.send(data)
-            self.request.send(message)
+    def write(self, message):
+        self.parse(message)
+        l = len(message)+4
+        data = struct.pack(">L", l)
+        self.request.send(data)
+        debug("handler.write %d %d" % (id(self.request), id(message)))
+        self.request.send(message)
 
 
 class SIDNEppProxyServer(TCPServer):
@@ -266,7 +329,8 @@ class SIDNEppProxyServer(TCPServer):
         return self.server._login
 
     def handle_timeout(self):
-        raise IOError("request timeout")
+        print "proxy timeout"
+        #raise IOError("request timeout")
 
 
 if __name__ == '__main__':
@@ -277,18 +341,22 @@ if __name__ == '__main__':
     if pid:
         print "parent"
         proxy = SIDNEppProxyServer(('127.0.0.1',7000))
-        proxy.timeout=4
-        proxy.login(testserver, testport, testuser, testpass)
+        #proxy.timeout=4
+        #proxy.login(testserver, testport, testuser, testpass)
         while 1:
+            print "parent handle_request"
+            proxy.handle_request()
             check = os.waitpid(pid,os.WNOHANG)
             if check != (0,0): break
-            proxy.handle_request()
+        print "parent child-exit"
+        proxy.logout()
         print "parent done"
     else:
-        time.sleep(2)
         print "child"
-        client = SIDNEppClient('localhost', 7000, ssl=False)
-        print "hello:", client.hello()
+        SIDNEppClient('localhost', 7000, ssl=False).hello()
+        print "login:", etree.tostring(SIDNEppClient('localhost', 7000, ssl=False).login('fakeusername','fakepassword'))
+        #print "poll:", etree.tostring(client.poll())
         time.sleep(2)
         print "child done"
         sys.exit(0)
+
