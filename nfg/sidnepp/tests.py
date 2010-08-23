@@ -1,10 +1,11 @@
 #!/usr/bin/python
 
 
-from sidnepp import SIDNEppProtocol
 from lxml import etree
-
 import unittest
+
+from sidnepp_protocol import SIDNEppProtocol
+from sidnepp_client import SIDNEppClient
 
 testserver = 'testdrs.domain-registry.nl'
 testport   = 700
@@ -58,7 +59,6 @@ class testSidnEppProtocol(unittest.TestCase):
         r3 = self.o.query(e,"//epp:login")
         self.failUnless(type(r3) == type(r2))
 
-from sidnepp import SIDNEppClient
 
 class testSIDNEppClient(unittest.TestCase):
 

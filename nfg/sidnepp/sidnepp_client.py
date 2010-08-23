@@ -13,21 +13,7 @@ from interfaces import IEpp
 import socket, struct, ssl
 from lxml import etree
 
-STATE_INIT      = 0x01
-STATE_CONNECTED = 0x02
-STATE_SESSION   = 0x04
-STATE_LOGGEDIN  = 0x08
-
-DEBUG=1
-
-testserver = 'testdrs.domain-registry.nl'
-testport   = 700
-testuser   = '300271'
-testpass   = 'c2155d6292'
-
-
-def debug(msg=None):
-    if msg and DEBUG: print msg
+from state import STATE_INIT, STATE_CONNECTED, STATE_SESSION, STATE_LOGGEDIN
 
 from sidnepp_protocol import SIDNEppProtocol
 
@@ -123,6 +109,10 @@ class SIDNEppClient(SIDNEppProtocol):
         if not r:
             result = self.read()
             r = self.query(result, "//epp:result")
+        if r[0].attrib['code'] != '1000':
+            raise Exception, "login failed. code was %s\nfull message:\n%s" % (
+                r[0].attrib['code'], etree.tostring(r[0]))
+
         self._connection_State = STATE_LOGGEDIN
         return result
 
