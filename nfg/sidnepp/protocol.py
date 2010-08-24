@@ -11,6 +11,12 @@
 from lxml import etree
 import os.path
 
+EPP_NAMESPACE = 'urn:ietf:params:xml:ns:epp-1.0'
+HOST_NAMESPACE = 'urn:ietf:params:xml:ns:host-1.0'
+DOMAIN_NAMESPACE = 'urn:ietf:params:xml:ns:domain-1.0'
+CONTACT_NAMESPACE = 'urn:ietf:params:xml:ns:contact-1.0'
+SIDN_EXT_NAMESPACE = 'urn:ietf:params:xml:ns:sidn-ext-epp-1.0'
+
 class SIDNEppProtocol(object):
 
     def __init__(self):
@@ -23,10 +29,10 @@ class SIDNEppProtocol(object):
     def query(self, element, query):
         return element.xpath(query, 
                              namespaces={
-                                 'e': 'urn:ietf:params:xml:ns:epp-1.0',
-                                 'h': 'urn:ietf:params:xml:ns:host-1.0',
-                                 'd': 'urn:ietf:params:xml:ns:domain-1.0',
-                                 'c': 'urn:ietf:params:xml:ns:contact-1.0',
-                                 'x': 'urn:ietf:params:xml:ns:sidn-ext-epp-1.0',
+                                 None : EPP_NAMESPACE, ## default namespace
+                                 'h': HOST_NAMESPACE,
+                                 'd': DOMAIN_NAMESPACE,
+                                 'c': CONTACT_NAMESPACE,
+                                 's': SIDN_EXT_NAMESPACE,
                              })
 

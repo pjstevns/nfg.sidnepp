@@ -12,6 +12,11 @@ from zope.interface import implements
 import socket, struct, ssl
 from lxml import etree
 
+
+import sys
+import os.path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..','..'))
+
 from nfg.sidnepp.interfaces import IEpp
 from nfg.sidnepp.protocol import SIDNEppProtocol
 from nfg.sidnepp.state import STATE_INIT, STATE_CONNECTED, STATE_SESSION, STATE_LOGGEDIN
@@ -30,13 +35,10 @@ class SIDNEppClient(SIDNEppProtocol):
         super(SIDNEppClient, self).__init__()
         self.host = host
         self.port = port
+        self.username = username
+        self.password = password
         self.ssl = ssl
         self.connect()
-        self._greeting = '<?xml version="1.0" encoding="UTF-8"?>%s' % \
-                etree.tostring(self.hello())
-        if username and password:
-            self._login = '<?xml version="1.0" encoding="UTF-8"?>%s' % \
-                    etree.tostring(self.login(username, password))
 
     def connect(self):
         assert(self._connection_State == STATE_INIT) 
@@ -48,14 +50,28 @@ class SIDNEppClient(SIDNEppProtocol):
             self._fd = s
         self._connection_State = STATE_CONNECTED
 
+        self._greeting = '<?xml version="1.0" encoding="UTF-8"?>%s' % \
+                etree.tostring(self.hello())
+        if self.username and self.password:
+            self._login = '<?xml version="1.0" encoding="UTF-8"?>%s' % \
+                    etree.tostring(self.login(self.username, self.password))
+
     def write(self, message):
         assert(self._connection_State > STATE_INIT)
         # validate
         self.parse(message)
         l = len(message)+4
         data = struct.pack(">L", l)
-        self._fd.send(data)
-        self._fd.send(message)
+        try:
+            self._fd.send(data)
+            self._fd.send(message)
+        except Exception:
+            # re-connect
+            self.close()
+            self.connect()
+            self._fd.send(data)
+            self._fd.send(message)
+
         return self.read()
 
     def read(self):
@@ -64,11 +80,18 @@ class SIDNEppClient(SIDNEppProtocol):
         need = need[0]-4
         return self.parse(self._fd.recv(need))
 
+    def close(self):
+        self._fd.close()
+        self._connection_State = STATE_INIT
+
     def getState(self):
         return self._connection_State
 
 # commands
     def hello(self):
+        if self._connection_State == STATE_SESSION and self._greeting:
+            return self.parse(self._greeting)
+
         assert(self._connection_State == STATE_CONNECTED)
         xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
         <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
@@ -77,9 +100,14 @@ class SIDNEppClient(SIDNEppProtocol):
         result = self.write(xml)
         assert(self.query(result,"//e:greeting"))
         self._connection_State = STATE_SESSION
+        self._greeting = '<?xml version="1.0" encoding="UTF-8"?>%s' % \
+                etree.tostring(result)
         return result
 
     def login(self, login, password, newpassword=None, lang='NL'):
+        if self._connection_State == STATE_LOGGEDIN and self._login:
+            return self.parse(self._login)
+
         assert(self._connection_State == STATE_SESSION)
         xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
         <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
@@ -113,6 +141,8 @@ class SIDNEppClient(SIDNEppProtocol):
                 r[0].attrib['code'], etree.tostring(r[0]))
 
         self._connection_State = STATE_LOGGEDIN
+        self._login = '<?xml version="1.0" encoding="UTF-8"?>%s' % \
+                etree.tostring(result)
         return result
 
     def logout(self):
@@ -127,8 +157,7 @@ class SIDNEppClient(SIDNEppProtocol):
         </epp>
         """
         res = self.write(xml)
-        self._fd.close()
-        self._connection_State = STATE_INIT
+        self.close()
         return res
 
     def poll(self, ack=None):
@@ -160,6 +189,22 @@ class SIDNEppClient(SIDNEppProtocol):
         </epp>
         """ % domain
         return self.write(xml)
+
+    def domain_info(self, domain):
+        xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+        <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+        <command>
+        <info>
+        <domain:info xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
+        <domain:name hosts="all">%s</domain:name>
+        </domain:info>
+        </info>
+        </command>
+        </epp>
+        """ % domain
+        return self.write(xml)
+
+
 
 if __name__ == '__main__':
     import doctest

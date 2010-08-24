@@ -11,6 +11,10 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..','..'))
 from nfg.sidnepp.protocol import SIDNEppProtocol
 from nfg.sidnepp.client import SIDNEppClient
 
+testserver = 'localhost'
+testport   = 7000
+testuser   = 'fakeuser'
+testpass   = 'fakepass'
 
 class testSidnEppProtocol(unittest.TestCase):
 
@@ -40,54 +44,98 @@ class testSidnEppProtocol(unittest.TestCase):
     def setUp(self):
         self.o = SIDNEppProtocol()
 
-#    def tearDown(self):
-#        try:
-#            self.o.logout()
-#        except AssertionError: 
-#            pass
-
     def test_parse(self):
-        e = self.o.parse(self.xml)
-        print e
+        self.o.parse(self.xml)
 
     def testQuery(self):
         e = self.o.parse(self.xml)
-        r1 = e.xpath('//epp:command', namespaces={'epp':"urn:ietf:params:xml:ns:epp-1.0"})
+        r1 = e.xpath('//e:command', namespaces={'e':"urn:ietf:params:xml:ns:epp-1.0"})
         self.failUnless(len(r1) == 1)
-        r2 = self.o.query(e, "//epp:command")
+        r2 = self.o.query(e, "//e:command")
         self.failUnless(r1 == r2)
-        r3 = self.o.query(e,"//epp:login")
+        r3 = self.o.query(e,"//e:login")
         self.failUnless(type(r3) == type(r2))
-
 
 class testSIDNEppClient(unittest.TestCase):
 
     def setUp(self):
-        self.o = SIDNEppClient(testserver,testport)
+        self.o = SIDNEppClient(host=testserver,
+                               port=testport,
+                               username=testuser,
+                               password=testpass, 
+                               ssl=False)
+
+    def tearDown(self):
+        try:
+            self.o.logout()
+        except AssertionError:
+            pass
+# 6.4 sessions
 
     def testLogin(self):
         s = self.o.login(testuser, testpass)
-        r = self.o.query(s, '//epp:result')
+        r = self.o.query(s, '//e:result')
         self.failUnless(len(r) > 0)
 
-#    def testLogout(self):
-#        s = self.o.login(testuser, testpass)
-#        r = self.o.query(s, '//epp:access')[0]
-#        s = self.o.logout()
-#        r = self.o.query(s, '//epp:result')[0]
-#        self.failUnless(r.get("code") == "1000")
-#
-    def testPoll(self):
-        s = self.o.login(testuser, testpass)
-        print etree.tostring(s)
-        s = self.o.poll()
-        print etree.tostring(s)
+    def testLogout(self):
+        s = self.o.logout()
+        r = self.o.query(s, '//e:result')[0]
+        self.failUnless(int(r.get("code")) == 1500)
 
-#    def testDomainCheck(self):
-#        self.o = SIDNEppClient('testdrs.domain-registry.nl',700,testuser,testpass)
-#        s = self.o.domain_check('nfg.nl')
-#        r = self.o.query(s, '//epp:result')[0]
-#        self.failUnless(r.get("code") == "1000")
+    def testPoll(self):
+        s = self.o.poll()
+        r = self.o.query(s, '//e:result')[0]
+        self.failUnless(int(r.get("code")) == 1300)
+        s = self.o.poll('fake')
+        r = self.o.query(s, '//e:result')[0]
+        self.failUnless(int(r.get("code")) == 2308)
+
+# 6.5 domains
+
+    def testDomainCheck(self):
+        s = self.o.domain_check('nfg.nl')
+        r = self.o.query(s, '//e:result')[0]
+        self.failUnless(int(r.get("code")) == 1000, r.get("code"))
+        r = self.o.query(s, '//d:name')[0]
+        self.failUnless(r.get("avail") == "false")
+
+    def testDomainInfo(self):
+        s = self.o.domain_info('nfg.nl')
+        r = self.o.query(s, '//e:result')[0]
+        self.failUnless(int(r.get("code")) == 1000)
+
+    def testDomainCreate(self):
+        pass
+
+    def testDomainUpdate(self):
+        pass
+
+    def testDomainDelete(self):
+        pass
+
+    def testDomainCancelDelete(self):
+        pass
+
+    def testDomainTransfer(self):
+        pass
+
+# 6.6 contacts
+
+    def testContactCheck(self):
+        pass
+
+    def testContactInfo(self):
+        pass
+
+    def testContactCreate(self):
+        pass
+
+    def testContactUpdate(self):
+        pass
+
+    def testContactDelete(self):
+        pass
+
 
 if __name__ == '__main__':
      unittest.main()

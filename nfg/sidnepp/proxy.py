@@ -108,8 +108,10 @@ class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
                 self._handle_logout(req)
             else:
                 # write this message to the server
+                print "send", etree.tostring(req)
                 rep = self.server.client.write(etree.tostring(req))
                 # post back the reply to the client
+                print "received", etree.tostring(rep)
                 self.write(etree.tostring(rep))
 
     def read(self):
