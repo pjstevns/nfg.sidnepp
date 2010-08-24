@@ -9,13 +9,12 @@
 # Paul Stevens, paul@nfg.nl
 
 from zope.interface import implements
-from interfaces import IEpp
 import socket, struct, ssl
 from lxml import etree
 
-from state import STATE_INIT, STATE_CONNECTED, STATE_SESSION, STATE_LOGGEDIN
-
-from sidnepp_protocol import SIDNEppProtocol
+from nfg.sidnepp.interfaces import IEpp
+from nfg.sidnepp.protocol import SIDNEppProtocol
+from nfg.sidnepp.state import STATE_INIT, STATE_CONNECTED, STATE_SESSION, STATE_LOGGEDIN
 
 class SIDNEppClient(SIDNEppProtocol):
     implements(IEpp)
@@ -76,7 +75,7 @@ class SIDNEppClient(SIDNEppProtocol):
           <hello/>
         </epp>"""
         result = self.write(xml)
-        assert(self.query(result,"//epp:greeting"))
+        assert(self.query(result,"//e:greeting"))
         self._connection_State = STATE_SESSION
         return result
 
@@ -105,10 +104,10 @@ class SIDNEppClient(SIDNEppProtocol):
         </epp>  
         """ % (login, password, lang)
         result = self.write(xml)
-        r = self.query(result, "//epp:result")
+        r = self.query(result, "//e:result")
         if not r:
             result = self.read()
-            r = self.query(result, "//epp:result")
+            r = self.query(result, "//e:result")
         if r[0].attrib['code'] != '1000':
             raise Exception, "login failed. code was %s\nfull message:\n%s" % (
                 r[0].attrib['code'], etree.tostring(r[0]))

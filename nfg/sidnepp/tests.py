@@ -4,13 +4,13 @@
 from lxml import etree
 import unittest
 
-from sidnepp_protocol import SIDNEppProtocol
-from sidnepp_client import SIDNEppClient
+import sys
+import os.path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..','..'))
 
-testserver = 'testdrs.domain-registry.nl'
-testport   = 700
-testuser   = '300271'
-testpass   = 'c2155d6292'
+from nfg.sidnepp.protocol import SIDNEppProtocol
+from nfg.sidnepp.client import SIDNEppClient
+
 
 class testSidnEppProtocol(unittest.TestCase):
 

@@ -10,11 +10,13 @@
 
 import struct
 from lxml import etree
-import os.path
 from SocketServer import TCPServer, BaseRequestHandler
 
-from sidnepp_protocol import SIDNEppProtocol
-from sidnepp_client import SIDNEppClient
+import sys
+import os.path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..','..'))
+from nfg.sidnepp.protocol import SIDNEppProtocol
+from nfg.sidnepp.client import SIDNEppClient
 
 class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
 
@@ -98,11 +100,11 @@ class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
                 req = self.read()
             except:
                 break
-            if self.query(req,'//epp:hello'):
+            if self.query(req,'//e:hello'):
                 self._handle_hello(req)
-            elif self.query(req,'//epp:login'):
+            elif self.query(req,'//e:login'):
                 self._handle_login(req)
-            elif self.query(req, '//epp:logout'):
+            elif self.query(req, '//e:logout'):
                 self._handle_logout(req)
             else:
                 # write this message to the server
@@ -157,28 +159,84 @@ class SIDNEppProxy(TCPServer):
         print "proxy timeout"
         #raise IOError("request timeout")
 
-if __name__ == '__main__':
-    import sys, time
-    #import doctest
-    #doctest.testmod(optionflags=doctest.ELLIPSIS)
-    if '--server' in sys.argv:
-        from tests import testserver, testport, testuser, testpass
-        print "Starting SIDNEppProxy"
-        proxy = SIDNEppProxy(('127.0.0.1',7000))
-        proxy.timeout=4
-        proxy.login(testserver, testport, testuser, testpass)
-        proxy.serve_forever()
-        print "parent child-exit"
-        proxy.logout()
-        print "parent done"
-    else:
-        print "child"
+def usage():
+    print """
 
-        client = SIDNEppClient('localhost', 7000, ssl=False)
-        print "login:", etree.tostring(client.login('fakeusername','fakepassword'))
-        print "poll:", etree.tostring(client.poll())
-        print "logout:", etree.tostring(client.logout())
-        time.sleep(2)
-        print "child done"
-        sys.exit(0)
+EPP Proxy server for SIDN 
+
+usage:
+
+proxy.py <options>
+
+options:
+
+    parameters for connecting to remote EPP service:
+
+  --server=<epp server>
+  --port=<epp server>
+  --username=<epp username>
+  --password=<epp password>
+
+    parameters for setting up local proxy service:
+
+  --address=<listen to address>
+  --listen=<listen to port>
+
+  """
+
+if __name__ == '__main__':
+    import getopt
+    server = port = username = address = listen = None
+
+    server    = 'testdrs.domain-registry.nl'
+    port      = 700
+    username  = '300271'
+    password  = 'c2155d6292'
+
+    address   = '127.0.0.1'
+    listen    = 7000
+
+    try:
+        optlist, args = getopt.getopt(sys.argv[1:], [
+            'server=', 
+            'port=',
+            'username=',
+            'password=',
+            'address=',
+            'listen='])
+    except getopt.GetoptError, err:
+        print str(err)
+        usage()
+        sys.exit(2)
+
+    for o,a in optlist:
+        if o == '--server':
+            server = a
+        if o == '--port':
+            port = int(a)
+        elif o == '--username':
+            username = a
+        elif o == '--password':
+            password = a
+        elif o == '--address':
+            address = a
+        elif o == '--port':
+            listen = int(a)
+
+    if not (server and port and username and address and listen):
+        usage()
+        sys.exit(2)
+
+
+    print "Starting SIDNEppProxy"
+    proxy = SIDNEppProxy((address,listen))
+    proxy.timeout=4
+    proxy.login(server, port, username, password)
+    print "succesfully logged into %s:%d" % (server, port)
+    print "ready for clients on %s:%d" % (address, listen)
+    proxy.serve_forever()
+    print "parent child-exit"
+    proxy.logout()
+    print "parent done"
+    sys.exit(0)
 

@@ -23,10 +23,10 @@ class SIDNEppProtocol(object):
     def query(self, element, query):
         return element.xpath(query, 
                              namespaces={
-                                 'epp': 'urn:ietf:params:xml:ns:epp-1.0',
-                                 'host': 'urn:ietf:params:xml:ns:host-1.0',
-                                 'domain': 'urn:ietf:params:xml:ns:domain-1.0',
-                                 'contact':'urn:ietf:params:xml:ns:contact-1.0',
-                                 'ext': 'urn:ietf:params:xml:ns:sidn-ext-epp-1.0',
+                                 'e': 'urn:ietf:params:xml:ns:epp-1.0',
+                                 'h': 'urn:ietf:params:xml:ns:host-1.0',
+                                 'd': 'urn:ietf:params:xml:ns:domain-1.0',
+                                 'c': 'urn:ietf:params:xml:ns:contact-1.0',
+                                 'x': 'urn:ietf:params:xml:ns:sidn-ext-epp-1.0',
                              })
 
