@@ -49,11 +49,11 @@ class testSidnEppProtocol(unittest.TestCase):
 
     def testQuery(self):
         e = self.o.parse(self.xml)
-        r1 = e.xpath('//e:command', namespaces={'e':"urn:ietf:params:xml:ns:epp-1.0"})
+        r1 = e.xpath('//epp:command', namespaces={'epp':"urn:ietf:params:xml:ns:epp-1.0"})
         self.failUnless(len(r1) == 1)
-        r2 = self.o.query(e, "//e:command")
+        r2 = self.o.query(e, "//epp:command")
         self.failUnless(r1 == r2)
-        r3 = self.o.query(e,"//e:login")
+        r3 = self.o.query(e,"//epp:login")
         self.failUnless(type(r3) == type(r2))
 
 class testSIDNEppClient(unittest.TestCase):
@@ -74,34 +74,34 @@ class testSIDNEppClient(unittest.TestCase):
 
     def testLogin(self):
         s = self.o.login(testuser, testpass)
-        r = self.o.query(s, '//e:result')
+        r = self.o.query(s, '//epp:result')
         self.failUnless(len(r) > 0)
 
     def testLogout(self):
         s = self.o.logout()
-        r = self.o.query(s, '//e:result')[0]
+        r = self.o.query(s, '//epp:result')[0]
         self.failUnless(int(r.get("code")) == 1500)
 
     def testPoll(self):
         s = self.o.poll()
-        r = self.o.query(s, '//e:result')[0]
+        r = self.o.query(s, '//epp:result')[0]
         self.failUnless(int(r.get("code")) == 1300)
         s = self.o.poll('fake')
-        r = self.o.query(s, '//e:result')[0]
+        r = self.o.query(s, '//epp:result')[0]
         self.failUnless(int(r.get("code")) == 2308)
 
 # 6.5 domains
 
     def testDomainCheck(self):
         s = self.o.domain_check('nfg.nl')
-        r = self.o.query(s, '//e:result')[0]
+        r = self.o.query(s, '//epp:result')[0]
         self.failUnless(int(r.get("code")) == 1000, r.get("code"))
-        r = self.o.query(s, '//d:name')[0]
+        r = self.o.query(s, '//domain:name')[0]
         self.failUnless(r.get("avail") == "false")
 
     def testDomainInfo(self):
         s = self.o.domain_info('nfg.nl')
-        r = self.o.query(s, '//e:result')[0]
+        r = self.o.query(s, '//epp:result')[0]
         self.failUnless(int(r.get("code")) == 1000)
 
     def testDomainCreate(self):
@@ -136,6 +136,29 @@ class testSIDNEppClient(unittest.TestCase):
     def testContactDelete(self):
         pass
 
+# 6.7 hosts
+    def testHostCheck(self):
+        s = self.o.host_check('ns.nfg.nl')
+        r = self.o.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000)
+        r = self.o.query(s, '//host:name')[0]
+        self.failUnless(r.get("avail") == "false")
+
+    def testHostInfo(self):
+        s = self.o.host_info('ns.nfg.nl')
+        r = self.o.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000)
+        r = self.o.query(s, "//host:addr[@ip='v4']")[0]
+        self.failUnless(r.text == "194.109.214.3")
+
+    def testHostCreate(self):
+        pass
+
+    def testHostUpdate(self):
+        pass
+
+    def testHostDelete(self):
+        pass
 
 if __name__ == '__main__':
      unittest.main()

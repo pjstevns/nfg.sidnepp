@@ -100,11 +100,11 @@ class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
                 req = self.read()
             except:
                 break
-            if self.query(req,'//e:hello'):
+            if self.query(req,'//epp:hello'):
                 self._handle_hello(req)
-            elif self.query(req,'//e:login'):
+            elif self.query(req,'//epp:login'):
                 self._handle_login(req)
-            elif self.query(req, '//e:logout'):
+            elif self.query(req, '//epp:logout'):
                 self._handle_logout(req)
             else:
                 # write this message to the server

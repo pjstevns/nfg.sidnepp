@@ -8,31 +8,46 @@
 #       
 # Paul Stevens, paul@nfg.nl
 
-from lxml import etree
+import lxml.etree as ET
+from lxml.etree import Element as E
 import os.path
 
-EPP_NAMESPACE = 'urn:ietf:params:xml:ns:epp-1.0'
-HOST_NAMESPACE = 'urn:ietf:params:xml:ns:host-1.0'
-DOMAIN_NAMESPACE = 'urn:ietf:params:xml:ns:domain-1.0'
-CONTACT_NAMESPACE = 'urn:ietf:params:xml:ns:contact-1.0'
-SIDN_EXT_NAMESPACE = 'urn:ietf:params:xml:ns:sidn-ext-epp-1.0'
+EPP_NS = 'urn:ietf:params:xml:ns:epp-1.0'
+HOST_NS = 'urn:ietf:params:xml:ns:host-1.0'
+DOMAIN_NS = 'urn:ietf:params:xml:ns:domain-1.0'
+CONTACT_NS = 'urn:ietf:params:xml:ns:contact-1.0'
+SIDN_EXT_NS = 'urn:ietf:params:xml:ns:sidn-ext-epp-1.0'
 
 class SIDNEppProtocol(object):
 
+    EPP = "{%s}" % EPP_NS
+    HOST = "{%s}" % HOST_NS
+    DOMAIN = "{%s}" % DOMAIN_NS
+    CONTACT = "{%s}" % CONTACT_NS
+    SIDN_EXT = "{%s}" % SIDN_EXT_NS
+
+    NSMAP = {
+        'epp' : EPP_NS, ## default namespace
+        'host': HOST_NS,
+        'domain': DOMAIN_NS,
+        'contact': CONTACT_NS,
+        'sidn-ext-epp': SIDN_EXT_NS,
+    }
+
     def __init__(self):
         xsd = os.path.join(os.path.dirname(__file__), 'xsd', 'sidn-ext-epp-1.0.xsd')
-        self.parser = etree.XMLParser(schema=etree.XMLSchema(etree.parse(open(xsd,'r'))))
+        self.parser = ET.XMLParser(schema=ET.XMLSchema(ET.parse(open(xsd,'r'))))
+
+    def render(self, element):
+        return ET.tostring(element, encoding="UTF-8", pretty_print=True, standalone=False)
 
     def parse(self, message):
-        return etree.fromstring(message, self.parser)
+        return ET.fromstring(message, self.parser)
 
     def query(self, element, query):
-        return element.xpath(query, 
-                             namespaces={
-                                 None : EPP_NAMESPACE, ## default namespace
-                                 'h': HOST_NAMESPACE,
-                                 'd': DOMAIN_NAMESPACE,
-                                 'c': CONTACT_NAMESPACE,
-                                 's': SIDN_EXT_NAMESPACE,
-                             })
+        return element.xpath(query, namespaces=self.NSMAP)
+
+    def epp(self):
+        return E(self.EPP + "epp", nsmap=self.NSMAP)
+
 

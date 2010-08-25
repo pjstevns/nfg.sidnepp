@@ -88,6 +88,9 @@ class SIDNEppClient(SIDNEppProtocol):
         return self._connection_State
 
 # commands
+
+# 6.4 SESSION
+
     def hello(self):
         if self._connection_State == STATE_SESSION and self._greeting:
             return self.parse(self._greeting)
@@ -98,7 +101,7 @@ class SIDNEppClient(SIDNEppProtocol):
           <hello/>
         </epp>"""
         result = self.write(xml)
-        assert(self.query(result,"//e:greeting"))
+        assert(self.query(result,"//epp:greeting"))
         self._connection_State = STATE_SESSION
         self._greeting = '<?xml version="1.0" encoding="UTF-8"?>%s' % \
                 etree.tostring(result)
@@ -132,10 +135,10 @@ class SIDNEppClient(SIDNEppProtocol):
         </epp>  
         """ % (login, password, lang)
         result = self.write(xml)
-        r = self.query(result, "//e:result")
+        r = self.query(result, "//epp:result")
         if not r:
             result = self.read()
-            r = self.query(result, "//e:result")
+            r = self.query(result, "//epp:result")
         if r[0].attrib['code'] != '1000':
             raise Exception, "login failed. code was %s\nfull message:\n%s" % (
                 r[0].attrib['code'], etree.tostring(r[0]))
@@ -176,6 +179,8 @@ class SIDNEppClient(SIDNEppProtocol):
             msgid='msgID="%s"' % ack
         return self.write(xml % (op, msgid))
 
+# 6.5 DOMAIN
+
     def domain_check(self, domain):
         xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
         <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
@@ -204,7 +209,77 @@ class SIDNEppClient(SIDNEppProtocol):
         """ % domain
         return self.write(xml)
 
+    def domain_create(self, domain, data):
+        pass
 
+    def domain_update(self, domain, data):
+        pass
+
+    def domain_delete(self, domain):
+        pass
+
+    def domain_cancel_delete(self, domain):
+        pass
+
+    def domain_transfer(self, domain, data):
+        pass
+
+
+# 6.6 CONTACT
+
+    def contact_check(self, contact):
+        pass
+
+    def contact_info(self, contact):
+        pass
+
+    def contact_create(self, contact, data):
+        pass
+
+    def contact_update(self, contact, data):
+        pass
+
+    def contact_delete(self, contact):
+        pass
+
+# 6.7 NAMESERVERS
+
+    def host_check(self, host):
+        xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+        <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+        <command>
+        <check>
+        <host:check xmlns:host="urn:ietf:params:xml:ns:host-1.0">
+        <host:name>%s</host:name>
+        </host:check>
+        </check>
+        </command>
+        </epp>
+        """ % host
+        return self.write(xml)
+
+    def host_info(self, host):
+        xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+        <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+        <command>
+        <info>
+        <host:info xmlns:host="urn:ietf:params:xml:ns:host-1.0">
+        <host:name>%s</host:name>
+        </host:info>
+        </info>
+        </command>
+        </epp>
+        """ % host
+        return self.write(xml)
+
+    def host_create(self, host, data):
+        pass
+
+    def host_update(self, host, data):
+        pass
+
+    def host_delete(self, host):
+        pass
 
 if __name__ == '__main__':
     import doctest
