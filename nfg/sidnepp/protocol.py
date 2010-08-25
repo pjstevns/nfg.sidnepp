@@ -10,6 +10,7 @@
 
 import lxml.etree as ET
 from lxml.etree import Element as E
+from lxml.builder import ElementMaker
 import os.path
 
 EPP_NS = 'urn:ietf:params:xml:ns:epp-1.0'
@@ -37,6 +38,14 @@ class SIDNEppProtocol(object):
     def __init__(self):
         xsd = os.path.join(os.path.dirname(__file__), 'xsd', 'sidn-ext-epp-1.0.xsd')
         self.parser = ET.XMLParser(schema=ET.XMLSchema(ET.parse(open(xsd,'r'))))
+        self.e_epp = ElementMaker(namespace=EPP_NS, nsmap={None: EPP_NS})
+        self.e_host = ElementMaker(namespace=HOST_NS, nsmap={'host': HOST_NS})
+        self.e_domain = ElementMaker(namespace=DOMAIN_NS, nsmap={'domain':
+                                                                DOMAIN_NS})
+        self.e_contact = ElementMaker(namespace=CONTACT_NS, nsmap={'contact':
+                                                                 CONTACT_NS})
+        self.e_sidn = ElementMaker(namespace=SIDN_EXT_NS, nsmap={'sidn-ext-epp':
+                                                               SIDN_EXT_NS})
 
     def render(self, element):
         return ET.tostring(element, encoding="UTF-8", pretty_print=True, standalone=False)

@@ -272,8 +272,12 @@ class SIDNEppClient(SIDNEppProtocol):
         """ % host
         return self.write(xml)
 
-    def host_create(self, host, data):
-        pass
+    def host_create(self, host, addr, ip="v4"):
+        assert(ip in ['v4','v6'])
+        e = self.e_epp
+        h = self.e_host
+        x = e.epp(e.command(e.create(h.create(h.name(host),h.addr(addr, ip=ip),))))
+        return self.write(self.render(x))
 
     def host_update(self, host, data):
         pass

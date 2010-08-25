@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 
-from lxml import etree
 import unittest
 
 import sys
@@ -16,7 +15,7 @@ testport   = 7000
 testuser   = 'fakeuser'
 testpass   = 'fakepass'
 
-class testSidnEppProtocol(unittest.TestCase):
+class testSIDNEppProtocol(unittest.TestCase):
 
     xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
     <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
@@ -55,6 +54,49 @@ class testSidnEppProtocol(unittest.TestCase):
         self.failUnless(r1 == r2)
         r3 = self.o.query(e,"//epp:login")
         self.failUnless(type(r3) == type(r2))
+
+    def testMaker(self):
+        e = self.o.e_epp
+        x = e.epp(
+            e.command(
+                e.login()
+            )
+        )
+
+        expect="""<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <command>
+    <login/>
+  </command>
+</epp>
+"""
+        self.failUnless(expect==self.o.render(x))
+
+        h = self.o.e_host
+        x = e.epp(
+            e.command(
+                e.create(
+                    h.create(
+                        h.name("ns10.nfgs.net"),
+                        h.addr("194.109.214.3", ip="v4"),
+                    )
+                )
+            )
+        )
+        expect="""<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <command>
+    <create>
+      <host:create xmlns:host="urn:ietf:params:xml:ns:host-1.0">
+        <host:name>ns10.nfgs.net</host:name>
+        <host:addr ip="v4">194.109.214.3</host:addr>
+      </host:create>
+    </create>
+  </command>
+</epp>
+"""
+        self.failUnless(expect==self.o.render(x))
+
 
 class testSIDNEppClient(unittest.TestCase):
 
@@ -152,7 +194,8 @@ class testSIDNEppClient(unittest.TestCase):
         self.failUnless(r.text == "194.109.214.3")
 
     def testHostCreate(self):
-        pass
+        s = self.o.host_create('ns10.nfgs.net','194.109.214.10',ip="v4")
+        self.o.render(s)
 
     def testHostUpdate(self):
         pass
@@ -162,3 +205,4 @@ class testSIDNEppClient(unittest.TestCase):
 
 if __name__ == '__main__':
      unittest.main()
+
