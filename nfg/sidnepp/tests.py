@@ -195,7 +195,7 @@ class testSIDNEppClient(unittest.TestCase):
 
     def testHostCreate(self):
         s = self.o.host_create('ns10.nfgs.net','194.109.214.10',ip="v4")
-        self.o.render(s)
+        print self.o.render(s)
 
     def testHostUpdate(self):
         pass
