@@ -59,7 +59,12 @@ class SIDNEppClient(SIDNEppProtocol):
     def write(self, message):
         assert(self._connection_State > STATE_INIT)
         # validate
-        self.parse(message)
+
+        if type(message) == etree._Element:
+            message = self.render(message)
+        else:
+            self.parse(message)
+
         l = len(message)+4
         data = struct.pack(">L", l)
         try:
@@ -276,35 +281,33 @@ class SIDNEppClient(SIDNEppProtocol):
         assert(ip in ['v4','v6'])
         e = self.e_epp
         h = self.e_host
+        t = [h.name(host),]
         if addr:
-            x = e.epp(
-                e.command(
-                    e.create(
-                        h.create(
-                            h.name(host),
-                            h.addr(addr, ip=ip)
-                        )
-                    )
-                )
-            )
-        else:
-            x = e.epp(
-                e.command(
-                    e.create(
-                        h.create(
-                            h.name(host)
-                        )
-                    )
-                )
-            )
-
-        return self.write(self.render(x))
+            if type(addr) == type("1"):
+                addr = [addr,]
+            assert(type(addr) == type([1,]))
+            [ t.append(h.addr(a,ip=ip)) for a in addr ]
+        t = tuple(t)
+        return self.write(e.epp(e.command(e.create(h.create(*t)))))
 
     def host_update(self, host, data):
-        pass
+        assert(type(data) == type({'a':'b'}))
+        e = self.e_epp
+        h = self.e_host
+        t = [h.name(host),]
+        for k,v in data.items():
+            if k == 'add':
+                [ t.append(h.add(h.addr(a))) for a in v ]
+            elif k == 'rem':
+                [ t.append(h.rem(h.addr(a))) for a in v ]
+            
+        t = tuple(t)
+        return self.write(e.epp(e.command(e.update(h.update(*t)))))
 
     def host_delete(self, host):
-        pass
+        e = self.e_epp
+        h = self.e_host
+        return self.write(e.epp(e.command(e.delete(h.delete(h.name(host))))))
 
 if __name__ == '__main__':
     import doctest

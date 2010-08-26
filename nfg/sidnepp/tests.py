@@ -109,6 +109,9 @@ class testSIDNEppClient(unittest.TestCase):
 
     def tearDown(self):
         try:
+            self.o.host_delete('ns10.nfgs.net')
+            self.o.host_delete('ns10.nfg.nl')
+            self.o.host_delete('ns99.nfg.nl')
             self.o.logout()
         except AssertionError:
             pass
@@ -194,14 +197,34 @@ class testSIDNEppClient(unittest.TestCase):
         self.failUnless(r.text == "194.109.214.3")
 
     def testHostCreate(self):
-        s = self.o.host_create('ns10.nfgs.net','194.109.214.10',ip="v4")
-        print self.o.render(s)
+        s = self.o.host_create('ns10.nfgs.net')
+        r = self.o.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000)
+        s = self.o.host_create('ns10.nfg.nl','194.109.214.3')
+        r = self.o.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000)
 
     def testHostUpdate(self):
-        pass
+        s = self.o.host_create('ns99.nfg.nl','194.109.214.123')
+        r = self.o.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000)
+        s = self.o.host_update('ns99.nfg.nl',
+                               {
+                                   'add': ['194.109.214.124'], 
+                                   'rem': ['194.109.214.123']
+                               }
+                              )
+        r = self.o.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000)
 
     def testHostDelete(self):
-        pass
+        s = self.o.host_create('ns99.nfgs.net')
+        r = self.o.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000)
+        s = self.o.host_delete('ns99.nfgs.net')
+        r = self.o.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000)
+        
 
 if __name__ == '__main__':
      unittest.main()
