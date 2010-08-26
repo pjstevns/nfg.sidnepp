@@ -164,9 +164,9 @@ class SIDNEppClient(SIDNEppProtocol):
         </command>
         </epp>
         """
-        res = self.write(xml)
+        r = self.write(xml)
         self.close()
-        return res
+        return r
 
     def poll(self, ack=None):
         assert(self._connection_State == STATE_LOGGEDIN) 
@@ -187,32 +187,18 @@ class SIDNEppClient(SIDNEppProtocol):
 # 6.5 DOMAIN
 
     def domain_check(self, domain):
-        xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-        <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
-        <command>
-        <check>
-        <domain:check xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
-        <domain:name>%s</domain:name>
-        </domain:check>
-        </check>
-        </command>
-        </epp>
-        """ % domain
-        return self.write(xml)
+        e = self.e_epp
+        d = self.e_domain
+        return self.write(
+            e.epp(e.command(e.check(d.check(d.name(domain)))))
+        )
 
     def domain_info(self, domain):
-        xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-        <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
-        <command>
-        <info>
-        <domain:info xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
-        <domain:name hosts="all">%s</domain:name>
-        </domain:info>
-        </info>
-        </command>
-        </epp>
-        """ % domain
-        return self.write(xml)
+        e = self.e_epp
+        d = self.e_domain
+        return self.write(
+            e.epp(e.command(e.info(d.info(d.name(domain,hosts='all')))))
+        )
 
     def domain_create(self, domain, data):
         pass
@@ -229,14 +215,18 @@ class SIDNEppClient(SIDNEppProtocol):
     def domain_transfer(self, domain, data):
         pass
 
-
 # 6.6 CONTACT
 
     def contact_check(self, contact):
-        pass
+        e = self.e_epp
+        c = self.e_contact
+        x = e.epp(e.command(e.check(c.check(c.id(contact)))))
+        return self.write(x)
 
     def contact_info(self, contact):
-        pass
+        e = self.e_epp
+        c = self.e_contact
+        return self.write(e.epp(e.command(e.info(c.info(c.id(contact))))))
 
     def contact_create(self, contact, data):
         pass
@@ -245,37 +235,21 @@ class SIDNEppClient(SIDNEppProtocol):
         pass
 
     def contact_delete(self, contact):
-        pass
+        e = self.e_epp
+        c = self.e_contact
+        return self.write(e.epp(e.command(e.delete(c.delete(c.id(contact))))))
 
 # 6.7 NAMESERVERS
 
     def host_check(self, host):
-        xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-        <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
-        <command>
-        <check>
-        <host:check xmlns:host="urn:ietf:params:xml:ns:host-1.0">
-        <host:name>%s</host:name>
-        </host:check>
-        </check>
-        </command>
-        </epp>
-        """ % host
-        return self.write(xml)
+        e = self.e_epp
+        h = self.e_host
+        return self.write(e.epp(e.command(e.check(h.check(h.name(host))))))
 
     def host_info(self, host):
-        xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-        <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
-        <command>
-        <info>
-        <host:info xmlns:host="urn:ietf:params:xml:ns:host-1.0">
-        <host:name>%s</host:name>
-        </host:info>
-        </info>
-        </command>
-        </epp>
-        """ % host
-        return self.write(xml)
+        e = self.e_epp
+        h = self.e_host
+        return self.write(e.epp(e.command(e.info(h.info(h.name(host))))))
 
     def host_create(self, host, addr=None, ip="v4"):
         assert(ip in ['v4','v6'])

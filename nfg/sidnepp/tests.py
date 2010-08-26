@@ -167,10 +167,15 @@ class testSIDNEppClient(unittest.TestCase):
 # 6.6 contacts
 
     def testContactCheck(self):
-        pass
+        s = self.o.contact_check('STE002126-NFGNT')
+        r = self.o.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000)
 
     def testContactInfo(self):
-        pass
+        s = self.o.contact_info('STE002126-NFGNT')
+        r = self.o.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000)
+        print self.o.render(s)
 
     def testContactCreate(self):
         pass

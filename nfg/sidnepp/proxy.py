@@ -96,10 +96,7 @@ class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
         # first read the incoming message from the client
         print "handle", self.client_address[0]
         while 1:
-            try:
-                req = self.read()
-            except:
-                break
+            req = self.read()
             if self.query(req,'//epp:hello'):
                 self._handle_hello(req)
             elif self.query(req,'//epp:login'):
@@ -115,9 +112,10 @@ class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
                 self.write(etree.tostring(rep))
 
     def read(self):
-        l = struct.unpack(">L", self.request.recv(4))[0]-4
-        message = self.request.recv(l)
-        return self.parse(message)
+        buf = self.request.recv(4)
+        need = struct.unpack(">L", buf)
+        need = need[0]-4
+        return self.parse(self.request.recv(need))
 
     def write(self, message):
         self.parse(message)
