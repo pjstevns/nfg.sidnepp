@@ -72,6 +72,7 @@ class SIDNEppClient(SIDNEppProtocol):
             self._fd.send(message)
         except Exception:
             # re-connect
+            print "Oops, reconnecting"
             self.close()
             self.connect()
             self._fd.send(data)
@@ -228,13 +229,92 @@ class SIDNEppClient(SIDNEppProtocol):
         c = self.e_contact
         return self.write(e.epp(e.command(e.info(c.info(c.id(contact))))))
 
+    def _build_contact_info(self, data):
+        c = self.e_contact
+        addrInfo = []
+        postalInfo = []
+        contactInfo = []
+
+        if data.has_key('name'):
+            postalInfo = [c.name(data['name']),]
+        if data.has_key('org'):
+            postalInfo.append(c.org(data['org']))
+
+        if data.has_key('street'):
+            addrInfo = [ c.street(x) for x in data['street'] ]
+        addrInfo.append(c.city(data['city']))
+        if data.has_key('sp'):
+            addrInfo.append(c.sp(data['sp']))
+        if (data.has_key('cc') and data['cc'] == 'NL') or data.has_key('pc'):
+            addrInfo.append(c.pc(data['pc']))
+        addrInfo.append(c.cc(data['cc']))
+
+        if len(addrInfo):
+            addrInfo = tuple(addrInfo)
+            postalInfo.append(c.addr(*addrInfo))
+
+        contactInfo.append(c.postalInfo(type='loc', *postalInfo))
+
+        if data.has_key('voice'):
+            contactInfo.append(c.voice(data['voice']))
+        if data.has_key('fax'):
+            contactInfo.append(c.fax(data['fax']))
+        if data.has_key('email'):
+            contactInfo.append(c.email(data['email']))
+        contactInfo.append(c.authInfo(c.pw('unused')))
+        return tuple(contactInfo)
+
+    def _build_legal_info(self, data):
+        s = self.e_sidn
+
+        sidnInfo = []
+        if data.has_key('legalForm'):
+            sidnInfo = [s.legalForm(data['legalForm']),]
+        if data.has_key('legalFormRegNo'):
+            sidnInfo.append(s.legalFormRegNo(data['legalFormRegNo']))
+        return tuple(sidnInfo)
+
     def contact_create(self, contact, data):
-        pass
+        e = self.e_epp
+        s = self.e_sidn
+        c = self.e_contact
+
+        contactInfo = self._build_contact_info(data)
+        sidnInfo = self._build_legal_info(data)
+
+        x = e.epp(
+            e.command(
+                e.create(c.create(c.id(contact), *contactInfo)),
+                e.extension(s.ext(s.create(s.contact(*sidnInfo))))
+            )
+        )
+        return self.write(x)
+        
 
     def contact_update(self, contact, data):
-        pass
+        e = self.e_epp
+        s = self.e_sidn
+        c = self.e_contact
+        extension = ()
+        change = ()
+
+        contactInfo = self._build_contact_info(data)
+        if contactInfo:
+            change = c.chg(*contactInfo)
+
+        sidnInfo = self._build_legal_info(data)
+        if sidnInfo:
+            extension = e.extension(s.ext(s.update(s.contact(*sidnInfo))))
+
+        x = e.epp(e.command(
+            e.update(c.update(c.id(contact), change)), 
+            *extension)
+        )
+        #return x
+        return self.write(x)
 
     def contact_delete(self, contact):
+        print "delete:", contact
         e = self.e_epp
         c = self.e_contact
         return self.write(e.epp(e.command(e.delete(c.delete(c.id(contact))))))

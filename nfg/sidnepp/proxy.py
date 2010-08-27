@@ -96,7 +96,11 @@ class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
         # first read the incoming message from the client
         print "handle", self.client_address[0]
         while 1:
-            req = self.read()
+            try:
+                req = self.read()
+            except:
+                # client hung up
+                break
             if self.query(req,'//epp:hello'):
                 self._handle_hello(req)
             elif self.query(req,'//epp:login'):

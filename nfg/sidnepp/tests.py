@@ -17,7 +17,7 @@ testpass   = 'fakepass'
 
 class testSIDNEppProtocol(unittest.TestCase):
 
-    xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+    xml1 = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
     <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
     <command>
     <login>
@@ -39,15 +39,54 @@ class testSIDNEppProtocol(unittest.TestCase):
     </command>
     </epp>"""
 
+    xml2="""<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<epp xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0" xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <command>
+    <create>
+      <contact:create xmlns:contact="urn:ietf:params:xml:ns:contact-1.0">
+        <contact:id>JAN100827-NFGNT</contact:id>
+        <contact:postalInfo type="loc">
+          <contact:name>Jan Janssen BV</contact:name>
+          <contact:org>Technisch Beheer</contact:org>
+          <contact:addr>
+            <contact:street>Wolvenplein 16</contact:street>
+            <contact:city>Utrecht</contact:city>
+            <contact:pc>3512CK</contact:pc>
+            <contact:cc>NL</contact:cc>
+          </contact:addr>
+        </contact:postalInfo>
+        <contact:voice>+31.0858779997</contact:voice>
+        <contact:fax>+31.0858779996</contact:fax>
+        <contact:email>test@nfg.nl</contact:email>
+        <contact:authInfo>
+          <contact:pw>unused</contact:pw>
+        </contact:authInfo>
+      </contact:create>
+    </create>
+    <extension>
+      <sidn-ext-epp:ext>
+        <sidn-ext-epp:create>
+          <sidn-ext-epp:contact>
+            <sidn-ext-epp:legalForm>BV</sidn-ext-epp:legalForm>
+            <sidn-ext-epp:legalFormRegNo>14633770</sidn-ext-epp:legalFormRegNo>
+          </sidn-ext-epp:contact>
+        </sidn-ext-epp:create>
+      </sidn-ext-epp:ext>
+    </extension>
+  </command>
+</epp>
+
+"""
 
     def setUp(self):
         self.o = SIDNEppProtocol()
 
     def test_parse(self):
-        self.o.parse(self.xml)
+        self.o.parse(self.xml1)
+        self.o.parse(self.xml2)
 
     def testQuery(self):
-        e = self.o.parse(self.xml)
+        e = self.o.parse(self.xml1)
         r1 = e.xpath('//epp:command', namespaces={'epp':"urn:ietf:params:xml:ns:epp-1.0"})
         self.failUnless(len(r1) == 1)
         r2 = self.o.query(e, "//epp:command")
@@ -57,6 +96,7 @@ class testSIDNEppProtocol(unittest.TestCase):
 
     def testMaker(self):
         e = self.o.e_epp
+
         x = e.epp(
             e.command(
                 e.login()
@@ -64,7 +104,7 @@ class testSIDNEppProtocol(unittest.TestCase):
         )
 
         expect="""<?xml version='1.0' encoding='UTF-8' standalone='no'?>
-<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+<epp xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0" xmlns="urn:ietf:params:xml:ns:epp-1.0">
   <command>
     <login/>
   </command>
@@ -84,7 +124,7 @@ class testSIDNEppProtocol(unittest.TestCase):
             )
         )
         expect="""<?xml version='1.0' encoding='UTF-8' standalone='no'?>
-<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+<epp xmlns:sidn-ext-epp="http://rxsd.domain-registry.nl/sidn-ext-epp-1.0" xmlns="urn:ietf:params:xml:ns:epp-1.0">
   <command>
     <create>
       <host:create xmlns:host="urn:ietf:params:xml:ns:host-1.0">
@@ -99,6 +139,22 @@ class testSIDNEppProtocol(unittest.TestCase):
 
 
 class testSIDNEppClient(unittest.TestCase):
+    userdata = dict(
+        name='Jan Janssen BV',
+        org='Technisch Beheer',
+        street=['Wolvenplein 16'],
+        city='Utrecht',
+        pc='3512CK',
+        cc='NL',
+        voice='+31.0858779997',
+        fax='+31.0858779996',
+        email='test@nfg.nl',
+        legalForm='BV',
+        legalFormRegNo='14633770',
+    )
+
+    hostq = []
+    contactq = []
 
     def setUp(self):
         self.o = SIDNEppClient(host=testserver,
@@ -109,11 +165,15 @@ class testSIDNEppClient(unittest.TestCase):
 
     def tearDown(self):
         try:
-            self.o.host_delete('ns10.nfgs.net')
-            self.o.host_delete('ns10.nfg.nl')
-            self.o.host_delete('ns99.nfg.nl')
+            for h in self.hostq:
+                self.o.host_delete(h)
+            self.hostq = []
+            for u in self.contactq:
+                self.o.contact_delete(u)
+            self.contactq = []
+
             self.o.logout()
-        except AssertionError:
+        except:
             pass
 # 6.4 sessions
 
@@ -175,16 +235,40 @@ class testSIDNEppClient(unittest.TestCase):
         s = self.o.contact_info('STE002126-NFGNT')
         r = self.o.query(s, '//epp:result')[0]
         self.failUnless(int(r.get("code")) == 1000)
-        print self.o.render(s)
 
     def testContactCreate(self):
-        pass
+        s = self.o.contact_create('JANJANSSENBV', self.userdata)
+        r = self.o.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000)
+        r = self.o.query(s, '//contact:id')[0]
+        s = self.o.contact_delete(r.text)
+        r = self.o.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000)
 
     def testContactUpdate(self):
-        pass
+        s = self.o.contact_create('JANJANSSENBV', self.userdata)
+        userid = self.o.query(s, '//contact:id')[0].text
+        self.contactq.append(userid)
 
-    def testContactDelete(self):
-        pass
+        data = dict(
+            name = 'Jan Janssen en co. BV',
+            org = 'Operationeel beheer',
+            street = ['Wolvenplein 16-bis'],
+            pc = '3512CK',
+            city = 'Utrecht',
+            cc = 'NL'
+        )
+        s = self.o.contact_update(userid, data)
+        r = self.o.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000)
+
+        s = self.o.contact_info(userid)
+        print self.o.render(s)
+
+
+#    def testContactDelete(self):
+#
+#        pass
 
 # 6.7 hosts
     def testHostCheck(self):
@@ -205,14 +289,17 @@ class testSIDNEppClient(unittest.TestCase):
         s = self.o.host_create('ns10.nfgs.net')
         r = self.o.query(s, '//epp:result')[0]
         self.failUnless(int(r.get("code")) == 1000)
+        self.hostq.append('ns10.nfgs.net')
         s = self.o.host_create('ns10.nfg.nl','194.109.214.3')
         r = self.o.query(s, '//epp:result')[0]
         self.failUnless(int(r.get("code")) == 1000)
+        self.hostq.append('ns10.nfg.nl')
 
     def testHostUpdate(self):
         s = self.o.host_create('ns99.nfg.nl','194.109.214.123')
         r = self.o.query(s, '//epp:result')[0]
         self.failUnless(int(r.get("code")) == 1000)
+        self.hostq.append('ns99.nfg.nl')
         s = self.o.host_update('ns99.nfg.nl',
                                {
                                    'add': ['194.109.214.124'], 

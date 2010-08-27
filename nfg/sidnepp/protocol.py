@@ -9,7 +9,6 @@
 # Paul Stevens, paul@nfg.nl
 
 import lxml.etree as ET
-from lxml.etree import Element as E
 from lxml.builder import ElementMaker
 import os.path
 
@@ -17,7 +16,7 @@ EPP_NS = 'urn:ietf:params:xml:ns:epp-1.0'
 HOST_NS = 'urn:ietf:params:xml:ns:host-1.0'
 DOMAIN_NS = 'urn:ietf:params:xml:ns:domain-1.0'
 CONTACT_NS = 'urn:ietf:params:xml:ns:contact-1.0'
-SIDN_EXT_NS = 'urn:ietf:params:xml:ns:sidn-ext-epp-1.0'
+SIDN_EXT_NS = 'http://rxsd.domain-registry.nl/sidn-ext-epp-1.0'
 
 class SIDNEppProtocol(object):
 
@@ -37,8 +36,12 @@ class SIDNEppProtocol(object):
 
     def __init__(self):
         xsd = os.path.join(os.path.dirname(__file__), 'xsd', 'sidn-ext-epp-1.0.xsd')
-        self.parser = ET.XMLParser(schema=ET.XMLSchema(ET.parse(open(xsd,'r'))))
-        self.e_epp = ElementMaker(namespace=EPP_NS, nsmap={None: EPP_NS})
+##        self.parser = ET.XMLParser(schema=ET.XMLSchema(ET.parse(open(xsd,'r'))))
+        self.e_epp = ElementMaker(
+            namespace=EPP_NS, nsmap={
+                None: EPP_NS,
+                'sidn-ext-epp': SIDN_EXT_NS}
+        )
         self.e_host = ElementMaker(namespace=HOST_NS, nsmap={'host': HOST_NS})
         self.e_domain = ElementMaker(namespace=DOMAIN_NS, nsmap={'domain':
                                                                 DOMAIN_NS})
@@ -51,12 +54,20 @@ class SIDNEppProtocol(object):
         return ET.tostring(element, encoding="UTF-8", pretty_print=True, standalone=False)
 
     def parse(self, message):
-        return ET.fromstring(message, self.parser)
+        try:
+            return ET.fromstring(message, base_url=SIDN_EXT_NS)
+        except ET.XMLSyntaxError:
+            import traceback
+            traceback.print_exc()
+            print "Failed parsing:"
+            print "------------------------------------------------------"
+            print message
+            print "------------------------------------------------------"
 
     def query(self, element, query):
         return element.xpath(query, namespaces=self.NSMAP)
 
-    def epp(self):
-        return E(self.EPP + "epp", nsmap=self.NSMAP)
+#    def epp(self):
+#        return E(self.EPP + "epp", nsmap=self.NSMAP)
 
 
