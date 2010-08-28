@@ -92,24 +92,24 @@ class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
                 self._handle_login(req)
             elif self.query(req, '//epp:logout'):
                 self._handle_logout(req)
+                break
             else:
                 # write this message to the server
                 # and post back the reply to the client
                 self.write(self.server.client.write(req))
 
     def read(self):
-        buf = self.request.recv(4)
-        need = struct.unpack(">L", buf)
-        need = need[0]-4
-        return self.parse(self.request.recv(need))
+        buf = self.readall(self.request, 4)
+        buf = self.readall(self.request, struct.unpack(">L", buf)[0]-4)
+        return self.parse(buf)
 
     def write(self, message):
         if type(message) == etree._Element:
             message = self.render(message)
         else:
             self.parse(message)
-        self.request.send(struct.pack(">L", len(message)+4))
-        self.request.send(message)
+        self.request.sendall(struct.pack(">L", len(message)+4))
+        self.request.sendall(message)
 
 
 class SIDNEppProxy(TCPServer):

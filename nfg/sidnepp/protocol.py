@@ -67,7 +67,12 @@ class SIDNEppProtocol(object):
     def query(self, element, query):
         return element.xpath(query, namespaces=self.NSMAP)
 
-#    def epp(self):
-#        return E(self.EPP + "epp", nsmap=self.NSMAP)
-
+    def readall(self, sock, size):
+        got = ""
+        while size > 0:
+            buf = sock.recv(size)
+            got += buf
+            size -= len(buf)
+        ##print "readall:", len(got),":", repr(got)
+        return got
 

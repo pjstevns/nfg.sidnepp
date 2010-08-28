@@ -81,10 +81,11 @@ class SIDNEppClient(SIDNEppProtocol):
         return self.read()
 
     def read(self):
-        buf = self._fd.recv(4)
+        buf = self.readall(self._fd, 4)
         need = struct.unpack(">L", buf)
         need = need[0]-4
-        return self.parse(self._fd.recv(need))
+        buf = self.readall(self._fd, need)
+        return self.parse(buf)
 
     def close(self):
         self._fd.close()
