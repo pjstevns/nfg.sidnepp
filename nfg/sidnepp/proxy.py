@@ -38,21 +38,10 @@ class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
         </svcExtension>
         </svcMenu>
         <dcp>
-        <access>
-        <all/>
-        </access>
-        <statement>
-        <purpose>
-        <admin/>
-        <prov/>
-        </purpose>
-        <recipient>
-        <ours/>
-        <public/>
-        </recipient>
-        <retention>
-        <stated/>
-        </retention>
+        <access><all/></access>
+        <statement><purpose><admin/><prov/></purpose>
+        <recipient><ours/><public/></recipient>
+        <retention><stated/></retention>
         </statement>
         </dcp>
         </greeting>
@@ -61,35 +50,32 @@ class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
         self.write(xml)
 
     def _handle_login(self, r):
-        xml = """<?xml version="1.0" encoding="utf-8"?>
-        <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
-        <response>
-        <result code="1000">
-        <msg>The transaction was completed successfully.</msg>
-        </result>
-        <trID>
-        <clTRID>1234</clTRID>
-        <svTRID>1234</svTRID>
-        </trID>
-        </response>
-        </epp>
-        """
-        self.write(xml)
+        e = self.e_epp
+        x = e.epp(
+            e.response(
+                e.result(
+                    e.msg('The transaction was completed successfully.'),
+                    code='1000'
+                ),
+                e.trID(
+                    e.clTRID('1234'),
+                    e.svTRID('1234')
+                )
+            )
+        )
+        self.write(x)
 
     def _handle_logout(self, r):
-        xml = """<?xml version="1.0" encoding="UTF-8"?>
-        <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
-        <response>
-        <result code="1500">
-        <msg>You are now logged off.</msg>
-        </result>
-        <trID>
-        <svTRID>1234</svTRID>
-        </trID>
-        </response>
-        </epp>
-        """
-        self.write(xml)
+        e = self.e_epp
+        x = e.epp(
+            e.response(
+                e.result(e.msg('You are now logged off.'),code='1500'),
+                e.trID(
+                    e.svTRID('1234')
+                )
+            )
+        )
+        self.write(x)
 
     def handle(self):
         SIDNEppProtocol.__init__(self)
@@ -98,8 +84,7 @@ class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
         while 1:
             try:
                 req = self.read()
-            except:
-                # client hung up
+            except: # client hung up
                 break
             if self.query(req,'//epp:hello'):
                 self._handle_hello(req)
@@ -109,11 +94,8 @@ class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
                 self._handle_logout(req)
             else:
                 # write this message to the server
-                print "send", etree.tostring(req)
-                rep = self.server.client.write(etree.tostring(req))
-                # post back the reply to the client
-                print "received", etree.tostring(rep)
-                self.write(etree.tostring(rep))
+                # and post back the reply to the client
+                self.write(self.server.client.write(req))
 
     def read(self):
         buf = self.request.recv(4)
@@ -122,7 +104,10 @@ class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
         return self.parse(self.request.recv(need))
 
     def write(self, message):
-        self.parse(message)
+        if type(message) == etree._Element:
+            message = self.render(message)
+        else:
+            self.parse(message)
         self.request.send(struct.pack(">L", len(message)+4))
         self.request.send(message)
 
