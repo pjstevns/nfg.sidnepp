@@ -24,7 +24,7 @@ from nfg.sidnepp.state import STATE_INIT, STATE_CONNECTED, STATE_SESSION, STATE_
 class SIDNEppClient(SIDNEppProtocol):
     implements(IEpp)
 
-    _connection_State = STATE_INIT
+    _state = STATE_INIT
     
     # server frames
     _greeting = None
@@ -41,14 +41,14 @@ class SIDNEppClient(SIDNEppProtocol):
         self.connect()
 
     def connect(self):
-        assert(self._connection_State == STATE_INIT) 
+        assert(self._state == STATE_INIT) 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((self.host, self.port))
         if self.ssl:
             self._fd = ssl.wrap_socket(s)
         else:
             self._fd = s
-        self._connection_State = STATE_CONNECTED
+        self._state = STATE_CONNECTED
 
         self._greeting = '<?xml version="1.0" encoding="UTF-8"?>%s' % \
                 etree.tostring(self.hello())
@@ -57,7 +57,7 @@ class SIDNEppClient(SIDNEppProtocol):
                     etree.tostring(self.login(self.username, self.password))
 
     def write(self, message):
-        assert(self._connection_State > STATE_INIT)
+        assert(self._state > STATE_INIT)
         # validate
 
         if type(message) == etree._Element:
@@ -89,36 +89,36 @@ class SIDNEppClient(SIDNEppProtocol):
 
     def close(self):
         self._fd.close()
-        self._connection_State = STATE_INIT
+        self._state = STATE_INIT
 
     def getState(self):
-        return self._connection_State
+        return self._state
 
 # commands
 
 # 6.4 SESSION
 
     def hello(self):
-        if self._connection_State == STATE_SESSION and self._greeting:
+        if self._state == STATE_SESSION and self._greeting:
             return self.parse(self._greeting)
 
-        assert(self._connection_State == STATE_CONNECTED)
+        assert(self._state == STATE_CONNECTED)
         xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
         <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
           <hello/>
         </epp>"""
         result = self.write(xml)
         assert(self.query(result,"//epp:greeting"))
-        self._connection_State = STATE_SESSION
+        self._state = STATE_SESSION
         self._greeting = '<?xml version="1.0" encoding="UTF-8"?>%s' % \
                 etree.tostring(result)
         return result
 
     def login(self, login, password, newpassword=None, lang='NL'):
-        if self._connection_State == STATE_LOGGEDIN and self._login:
+        if self._state == STATE_LOGGEDIN and self._login:
             return self.parse(self._login)
 
-        assert(self._connection_State == STATE_SESSION)
+        assert(self._state == STATE_SESSION)
         e = self.e_epp
         x = e.epp(
             e.command(
@@ -137,22 +137,21 @@ class SIDNEppClient(SIDNEppProtocol):
                 )
             )
         )
-        result = self.write(x)
-        r = self.query(result, "//epp:result")
+        s = self.write(x)
+        r = self.query(s, "//epp:result")
         if not r:
-            print "Oops, retry reading"
-            result = self.read()
-            r = self.query(result, "//epp:result")
+            s = self.read()
+            r = self.query(s, "//epp:result")
         if int(r[0].get('code')) != 1000:
             raise Exception, "login failed. code was %s\nfull message:\n%s" % (
                 r[0].get('code'), self.render(r[0]))
 
-        self._connection_State = STATE_LOGGEDIN
-        self._login = self.render(result)
-        return result
+        self._state = STATE_LOGGEDIN
+        self._login = self.render(s)
+        return s
 
     def logout(self):
-        assert(self._connection_State == STATE_LOGGEDIN) 
+        assert(self._state == STATE_LOGGEDIN) 
         xml = """<?xml version="1.0" encoding="UTF-8"?>
         <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" 
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
@@ -167,7 +166,7 @@ class SIDNEppClient(SIDNEppProtocol):
         return r
 
     def poll(self, ack=None):
-        assert(self._connection_State == STATE_LOGGEDIN) 
+        assert(self._state == STATE_LOGGEDIN) 
         e = self.e_epp
         if ack:
             poll = e.poll(op='ack',msgID=ack)

@@ -161,15 +161,15 @@ options:
 
     parameters for connecting to remote EPP service:
 
-  --server=<epp server>
-  --port=<epp server>
-  --username=<epp username>
-  --password=<epp password>
+  -s <addr> --server=<epp server>           default: testdrs.domain-registry.nl
+  -p <port> --port=<epp server>             default: 700
+  -u <username> --username=<epp username>
+  -w <password> --password=<epp password>
 
     parameters for setting up local proxy service:
 
-  --address=<listen to address>
-  --listen=<listen to port>
+  -a --address=<listen to address>          default: localhost
+  -l --listen=<listen to port>              default: 7000
 
   """
 
@@ -179,14 +179,14 @@ if __name__ == '__main__':
 
     server    = 'testdrs.domain-registry.nl'
     port      = 700
-    username  = '300271'
-    password  = 'c2155d6292'
+    username  = False
+    password  = False
 
     address   = '127.0.0.1'
     listen    = 7000
 
     try:
-        optlist, args = getopt.getopt(sys.argv[1:], [
+        optlist, args = getopt.getopt(sys.argv[1:], "s:p:u:w:a:l", [
             'server=', 
             'port=',
             'username=',
@@ -212,19 +212,17 @@ if __name__ == '__main__':
         elif o == '--port':
             listen = int(a)
 
-    if not (server and port and username and address and listen):
+    if not username and password:
         usage()
         sys.exit(2)
-
 
     print "Starting SIDNEppProxy"
     proxy = SIDNEppProxy((address,listen))
     proxy.timeout=4
     proxy.login(server, port, username, password)
-    print "succesfully logged into %s:%d" % (server, port)
-    print "ready for clients on %s:%d" % (address, listen)
+    print "Connected to: %s:%d" % (server, port)
+    print "Listen on: %s:%d" % (address, listen)
     proxy.serve_forever()
-    print "parent child-exit"
     proxy.logout()
     print "parent done"
     sys.exit(0)
