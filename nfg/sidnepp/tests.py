@@ -263,12 +263,8 @@ class testSIDNEppClient(unittest.TestCase):
         self.failUnless(int(r.get("code")) == 1000)
 
         s = self.o.contact_info(userid)
-        print self.o.render(s)
-
-
-#    def testContactDelete(self):
-#
-#        pass
+        r = self.o.query(s,'//contact:name')[0].text
+        self.failUnless(r == data['name'])
 
 # 6.7 hosts
     def testHostCheck(self):
@@ -287,13 +283,14 @@ class testSIDNEppClient(unittest.TestCase):
 
     def testHostCreate(self):
         s = self.o.host_create('ns10.nfgs.net')
-        r = self.o.query(s, '//epp:result')[0]
-        self.failUnless(int(r.get("code")) == 1000)
         self.hostq.append('ns10.nfgs.net')
-        s = self.o.host_create('ns10.nfg.nl','194.109.214.3')
         r = self.o.query(s, '//epp:result')[0]
         self.failUnless(int(r.get("code")) == 1000)
+
+        s = self.o.host_create('ns10.nfg.nl','194.109.214.3')
         self.hostq.append('ns10.nfg.nl')
+        r = self.o.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000)
 
     def testHostUpdate(self):
         s = self.o.host_create('ns99.nfg.nl','194.109.214.123')

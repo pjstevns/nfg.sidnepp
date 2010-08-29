@@ -311,11 +311,9 @@ class SIDNEppClient(SIDNEppProtocol):
             e.update(c.update(c.id(contact), change)), 
             *extension)
         )
-        #return x
         return self.write(x)
 
     def contact_delete(self, contact):
-        print "delete:", contact
         e = self.e_epp
         c = self.e_contact
         return self.write(e.epp(e.command(e.delete(c.delete(c.id(contact))))))
