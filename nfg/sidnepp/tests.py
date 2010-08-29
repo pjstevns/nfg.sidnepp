@@ -3,6 +3,7 @@
 
 import unittest
 
+import time
 import sys
 import os.path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..','..'))
@@ -154,6 +155,7 @@ class testSIDNEppClient(unittest.TestCase):
     )
 
     hostq = []
+    domainq = []
     contactq = []
 
     def setUp(self):
@@ -170,6 +172,9 @@ class testSIDNEppClient(unittest.TestCase):
             self.hostq = []
             for u in self.contactq:
                 self.o.contact_delete(u)
+            self.contactq = []
+            for d in self.domainq:
+                self.o.domain_delete(d)
             self.contactq = []
 
             self.o.logout()
@@ -210,13 +215,38 @@ class testSIDNEppClient(unittest.TestCase):
         self.failUnless(int(r.get("code")) == 1000)
 
     def testDomainCreate(self):
-        pass
+        data = dict(
+            ns=['ns.nfg.nl','nfg3.nfgs.net'],
+            owner='STE002126-NFGNT',
+            admin='STE002126-NFGNT',
+            tech='STE002126-NFGNT'
+        )
+
+        domain = 'nfg-%s-create.nl' % time.strftime(
+            "%g%m%d%H%M%S", time.localtime())
+        s = self.o.domain_create(domain, data)
+        self.domainq.append(domain)
+        r = self.o.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000)
 
     def testDomainUpdate(self):
         pass
 
     def testDomainDelete(self):
-        pass
+        data = dict(
+            ns=['ns.nfg.nl','nfg3.nfgs.net'],
+            owner='STE002126-NFGNT',
+            admin='STE002126-NFGNT',
+            tech='STE002126-NFGNT'
+        )
+        domain = 'nfg-%s-delete.nl' % time.strftime(
+            "%g%m%d%H%M%S", time.localtime())
+        s = self.o.domain_create(domain, data)
+        r = self.o.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000, self.o.render(s))
+        s = self.o.domain_delete(domain)
+        r = self.o.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000, self.o.render(s))
 
     def testDomainCancelDelete(self):
         pass

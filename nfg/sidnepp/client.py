@@ -119,40 +119,36 @@ class SIDNEppClient(SIDNEppProtocol):
             return self.parse(self._login)
 
         assert(self._connection_State == STATE_SESSION)
-        xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-        <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
-        <command>
-        <login>
-        <clID>%s</clID>
-        <pw>%s</pw>
-        <options>
-        <version>1.0</version>
-        <lang>%s</lang>
-        </options>
-        <svcs>
-        <objURI>urn:ietf:params:xml:ns:contact-1.0</objURI>
-        <objURI>urn:ietf:params:xml:ns:host-1.0</objURI>
-        <objURI>urn:ietf:params:xml:ns:domain-1.0</objURI>
-        <svcExtension>
-        <extURI>urn:ietf:params:xml:ns:sidn-ext-epp-1.0</extURI>
-        </svcExtension>
-        </svcs>
-        </login>
-        </command>
-        </epp>  
-        """ % (login, password, lang)
-        result = self.write(xml)
+        e = self.e_epp
+        x = e.epp(
+            e.command(
+                e.login(
+                    e.clID(login),
+                    e.pw(password),
+                    e.options(e.version('1.0'), e.lang(lang)),
+                    e.svcs(
+                        e.objURI('urn:ietf:params:xml:ns:contact-1.0'),
+                        e.objURI('urn:ietf:params:xml:ns:host-1.0'),
+                        e.objURI('urn:ietf:params:xml:ns:domain-1.0'),
+                        e.svcExtension(
+                            e.extURI('urn:ietf:params:xml:ns:sidn-ext-epp-1.0')
+                        )
+                    )
+                )
+            )
+        )
+        result = self.write(x)
         r = self.query(result, "//epp:result")
         if not r:
+            print "Oops, retry reading"
             result = self.read()
             r = self.query(result, "//epp:result")
-        if r[0].attrib['code'] != '1000':
+        if int(r[0].get('code')) != 1000:
             raise Exception, "login failed. code was %s\nfull message:\n%s" % (
-                r[0].attrib['code'], etree.tostring(r[0]))
+                r[0].get('code'), self.render(r[0]))
 
         self._connection_State = STATE_LOGGEDIN
-        self._login = '<?xml version="1.0" encoding="UTF-8"?>%s' % \
-                etree.tostring(result)
+        self._login = self.render(result)
         return result
 
     def logout(self):
@@ -172,19 +168,12 @@ class SIDNEppClient(SIDNEppProtocol):
 
     def poll(self, ack=None):
         assert(self._connection_State == STATE_LOGGEDIN) 
-        xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?> 
-        <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
-        <command>
-        <poll op="%s" %s/>
-        </command>
-        </epp>
-        """
-        op='req'
-        msgid=''
+        e = self.e_epp
         if ack:
-            op='ack'
-            msgid='msgID="%s"' % ack
-        return self.write(xml % (op, msgid))
+            poll = e.poll(op='ack',msgID=ack)
+        else:
+            poll = e.poll(op='req')
+        return self.write(e.epp(e.command(poll)))
 
 # 6.5 DOMAIN
 
@@ -203,13 +192,47 @@ class SIDNEppClient(SIDNEppProtocol):
         )
 
     def domain_create(self, domain, data):
-        pass
+        e = self.e_epp
+        d = self.e_domain
+        nslist = []
+        for ns in data['ns']:
+            nslist.append(d.hostObj(ns))
+        nslist = tuple(nslist)
+        x = e.epp(
+            e.command(
+                e.create(
+                    d.create(
+                        d.name(domain),
+                        d.ns(*nslist),
+                        d.registrant(data['owner']),
+                        d.contact(data['admin'], type='admin'),
+                        d.contact(data['tech'], type='tech'),
+                        d.authInfo(
+                            d.pw('unused')
+                        )
+                    )
+                )
+            )
+        )
+        return self.write(x)
 
     def domain_update(self, domain, data):
         pass
 
     def domain_delete(self, domain):
-        pass
+        e = self.e_epp
+        d = self.e_domain
+        return self.write(
+            e.epp(
+                e.command(
+                    e.delete(
+                        d.delete(
+                            d.name(domain)
+                        )
+                    )
+                )
+            )
+        )
 
     def domain_cancel_delete(self, domain):
         pass
