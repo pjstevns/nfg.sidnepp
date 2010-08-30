@@ -4,3 +4,14 @@ for the SIDN EPP interface.
 
 http://www.nfg.nl
 
+It supports an EPP-Proxy for reducing the number of sessions
+hitting the upstream SIDN EPP service.
+
+It also includes a wrapper for the XML-Whois service operated
+by SIDN, which is the preferred way to access domain information.
+
+For usage examples please check tests.py and whois.py.
+
+
+
+
