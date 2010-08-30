@@ -221,7 +221,6 @@ class testSIDNEppClient(unittest.TestCase):
             admin='STE002126-NFGNT',
             tech='STE002126-NFGNT'
         )
-
         domain = 'nfg-%s-create.nl' % time.strftime(
             "%g%m%d%H%M%S", time.localtime())
         s = self.o.domain_create(domain, data)
@@ -230,7 +229,45 @@ class testSIDNEppClient(unittest.TestCase):
         self.failUnless(int(r.get("code")) == 1000)
 
     def testDomainUpdate(self):
-        pass
+        data = dict(
+            ns=['ns.nfg.nl','nfg3.nfgs.net'],
+            owner='STE002126-NFGNT',
+            admin='STE002126-NFGNT',
+            tech='STE002126-NFGNT'
+        )
+        domain = 'nfg-%s-create.nl' % time.strftime(
+            "%g%m%d%H%M%S", time.localtime())
+
+        s = self.o.domain_create(domain, data)
+        self.domainq.append(domain)
+
+        s = self.o.contact_create('JANJANSSENBV', self.userdata)
+        r = self.o.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000)
+        contact = self.o.query(s, '//contact:id')[0].text
+        self.contactq.append(contact)
+
+        self.o.host_create('ns123.nfg.nl',['194.109.214.3'])
+        self.hostq.append('ns123.nfg.nl')
+ 
+        update = dict(
+            add = dict(
+                ns = ['ns123.nfg.nl'],
+                tech = [contact],
+                admin = contact,
+            ),
+            rem = dict(
+                ns = ['nfg3.nfgs.net'],
+                admin = 'STE002126-NFGNT'
+            ),
+            chg = dict(
+                owner = contact
+            )
+        )
+        s = self.o.domain_update(domain, update)
+        r = self.o.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000)
+
 
     def testDomainDelete(self):
         data = dict(

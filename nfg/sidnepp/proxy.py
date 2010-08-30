@@ -212,7 +212,7 @@ if __name__ == '__main__':
         elif o == '--port':
             listen = int(a)
 
-    if not username and password:
+    if not (username and password):
         usage()
         sys.exit(2)
 

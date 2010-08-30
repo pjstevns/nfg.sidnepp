@@ -215,23 +215,68 @@ class SIDNEppClient(SIDNEppProtocol):
         )
         return self.write(x)
 
-    def domain_update(self, domain, data):
-        pass
+    def _build_domain_update(self, key, value):
+        d = self.e_domain
+        u = []
+        if key in ['add','rem']:
+            if value.has_key('ns'):
+                l = [ d.hostObj(t) for t in value['ns'] ]
+                l = tuple(l)
+                u.append(d.ns(*l))
+            if value.has_key('tech'):
+                if type(value['tech']) != type([1,]):
+                    value['tech'] = [value['tech'],]
+                [ u.append(d.contact(t, type='tech')) for t in value['tech'] ]
+            if value.has_key('admin'):
+                u.append(d.contact(value['admin'], type='admin'))
+        if key in ['chg']:
+            u.append(d.registrant(value['owner']))
+        return tuple(u)
 
-    def domain_delete(self, domain):
+    def domain_update(self, domain, data):
+        keys = data.keys()
+        for k in keys:
+            assert(k in ['add','chg','rem'])
         e = self.e_epp
         d = self.e_domain
-        return self.write(
-            e.epp(
-                e.command(
-                    e.delete(
-                        d.delete(
-                            d.name(domain)
-                        )
+        add = ()
+        chg = ()
+        rem = ()
+        for k,v in data.items():
+            if k == 'add':
+                add = self._build_domain_update(k, v)
+            elif k == 'rem':
+                rem = self._build_domain_update(k, v)
+            elif k == 'chg':
+                chg = self._build_domain_update(k, v)
+
+        x = e.epp(
+            e.command(
+                e.update(
+                    d.update(
+                        d.name(domain),
+                        d.add(*add),
+                        d.rem(*rem),
+                        d.chg(*chg),
                     )
                 )
             )
         )
+        return self.write(x)
+
+    def domain_delete(self, domain):
+        e = self.e_epp
+        d = self.e_domain
+        x = e.epp(
+            e.command(
+                e.delete(
+                    d.delete(
+                        d.name(domain)
+                    )
+                )
+            )
+        )
+        return self.write(x)
 
     def domain_cancel_delete(self, domain):
         pass
