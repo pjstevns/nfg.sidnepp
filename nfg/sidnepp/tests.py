@@ -267,7 +267,15 @@ class testSIDNEppClient(unittest.TestCase):
         s = self.o.domain_update(domain, update)
         r = self.o.query(s, '//epp:result')[0]
         self.failUnless(int(r.get("code")) == 1000)
+        update = dict(
+            chg = dict(
+                owner = 'STE002126-NFGNT'
+            )
+        )
 
+        s = self.o.domain_update(domain, update)
+        r = self.o.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000)
 
     def testDomainDelete(self):
         data = dict(
