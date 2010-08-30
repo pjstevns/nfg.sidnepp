@@ -279,7 +279,18 @@ class SIDNEppClient(SIDNEppProtocol):
         return self.write(x)
 
     def domain_cancel_delete(self, domain):
-        pass
+        e = self.e_xsi
+        s = self.e_sidn
+        x = e.epp(
+            e.extension(
+                s.command(
+                    s.domainCancelDelete(
+                        s.name(domain)
+                    )
+                )
+            )
+        )
+        return self.write(x)
 
     def domain_transfer(self, domain, data):
         pass

@@ -294,7 +294,21 @@ class testSIDNEppClient(unittest.TestCase):
         self.failUnless(int(r.get("code")) == 1000, self.o.render(s))
 
     def testDomainCancelDelete(self):
-        pass
+        data = dict(
+            ns=['ns.nfg.nl','nfg3.nfgs.net'],
+            owner='STE002126-NFGNT',
+            admin='STE002126-NFGNT',
+            tech='STE002126-NFGNT'
+        )
+        domain = 'nfg-%s-delete.nl' % time.strftime(
+            "%g%m%d%H%M%S", time.localtime())
+        self.o.domain_create(domain, data)
+        self.domainq.append(domain)
+        self.o.domain_delete(domain)
+        s = self.o.domain_cancel_delete(domain)
+        r = self.o.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000, self.o.render(s))
+
 
     def testDomainTransfer(self):
         pass
