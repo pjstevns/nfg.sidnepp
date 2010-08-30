@@ -292,8 +292,21 @@ class SIDNEppClient(SIDNEppProtocol):
         )
         return self.write(x)
 
-    def domain_transfer(self, domain, data):
-        pass
+    def domain_transfer(self, domain, op, token=None):
+        assert(op in ['request','approve','cancel','query'])
+        e = self.e_epp
+        d = self.e_domain
+
+        auth = []
+        auth.append(d.name(domain))
+
+        if op == 'request':
+            assert(token)
+            auth.append(d.authInfo(d.pw(token)))
+        auth = tuple(auth)
+
+        x = e.epp(e.command(e.transfer(d.transfer(*auth), op=op)))
+        return self.write(x)
 
 # 6.6 CONTACT
 

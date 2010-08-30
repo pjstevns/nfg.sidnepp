@@ -140,6 +140,8 @@ class testSIDNEppProtocol(unittest.TestCase):
 
 
 class testSIDNEppClient(unittest.TestCase):
+    dummy = None
+
     userdata = dict(
         name='Jan Janssen BV',
         org='Technisch Beheer',
@@ -178,6 +180,7 @@ class testSIDNEppClient(unittest.TestCase):
             self.contactq = []
 
             self.o.logout()
+            self.dummy.logout()
         except:
             pass
 # 6.4 sessions
@@ -309,9 +312,65 @@ class testSIDNEppClient(unittest.TestCase):
         r = self.o.query(s, '//epp:result')[0]
         self.failUnless(int(r.get("code")) == 1000, self.o.render(s))
 
-
     def testDomainTransfer(self):
-        pass
+        try:
+            self.dummy = SIDNEppClient(host=testserver,
+                                   port=int(testport)+1,
+                                   username=testuser,
+                                   password=testpass, 
+                                   ssl=False)
+        except:
+            print "\n\n\t\tUnable to test domain-transfers"
+            print "\t\tPlease run proxy for dummy user on %s:%d\n\n" % (
+                testserver, int(testport)+1
+            )
+            return
+
+        data = dict(
+            ns=['ns.nfg.nl','nfg3.nfgs.net'],
+            owner='STE002126-NFGNT',
+            admin='STE002126-NFGNT',
+            tech='STE002126-NFGNT'
+        )
+        domain = 'nfg-%s-delete.nl' % time.strftime(
+            "%g%m%d%H%M%S", time.localtime())
+        self.o.domain_create(domain, data)
+        self.domainq.append(domain)
+
+        s = self.o.domain_info(domain)
+        authtoken = self.o.query(s, '//domain:pw')[0].text
+
+        s = self.dummy.domain_transfer(domain, 'request', authtoken)
+        r = self.dummy.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000, self.dummy.render(s))
+
+        s = self.o.domain_transfer(domain, 'query')
+        r = self.o.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000, self.o.render(s))
+
+        s = self.dummy.domain_transfer(domain, 'cancel')
+        r = self.dummy.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000, self.dummy.render(s))
+
+        s = self.dummy.domain_transfer(domain, 'query')
+        r = self.dummy.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000, self.dummy.render(s))
+
+        # cancelled transfers reset the token
+        s = self.o.domain_info(domain)
+        authtoken = self.o.query(s, '//domain:pw')[0].text
+
+        s = self.dummy.domain_transfer(domain, 'request', authtoken)
+        r = self.dummy.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000, self.dummy.render(s))
+
+        s = self.o.domain_transfer(domain, 'approve')
+        r = self.o.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000, self.o.render(s))
+
+        s = self.dummy.domain_transfer(domain, 'query')
+        r = self.dummy.query(s, '//epp:result')[0]
+        self.failUnless(int(r.get("code")) == 1000, self.dummy.render(s))
 
 # 6.6 contacts
 

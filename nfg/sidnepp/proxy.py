@@ -209,7 +209,7 @@ if __name__ == '__main__':
             password = a
         elif o == '--address':
             address = a
-        elif o == '--port':
+        elif o == '--listen':
             listen = int(a)
 
     if not (username and password):
