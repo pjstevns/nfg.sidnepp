@@ -453,14 +453,6 @@ class SIDNEppClient(SIDNEppProtocol):
         h = self.e_host
         return self.write(e.epp(e.command(e.delete(h.delete(h.name(host))))))
 
-
-### compatibility
-    def domain_available(self, domain):
-        s = self.domain_check(domain)
-        r = self.query(s, '//domain:name')[0]
-        return r.get("avail") == "true"
-
-
 if __name__ == '__main__':
     import doctest
     doctest.testmod(optionflags=doctest.ELLIPSIS)
