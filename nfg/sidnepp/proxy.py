@@ -18,6 +18,15 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..','..'))
 from nfg.sidnepp.protocol import SIDNEppProtocol
 from nfg.sidnepp.client import SIDNEppClient
 
+import logging
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+ch.setFormatter(formatter)
+log.addHandler(ch)
+
 class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
 
     def _handle_hello(self, req):
@@ -80,7 +89,7 @@ class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
     def handle(self):
         SIDNEppProtocol.__init__(self)
         # first read the incoming message from the client
-        print "handle", self.client_address[0]
+        log.debug("handle %s" % self.client_address[0])
         while 1:
             try:
                 req = self.read()
@@ -99,8 +108,10 @@ class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
                 self.write(self.server.client.write(req))
 
     def read(self):
+        log.debug("reading...")
         buf = self.readall(self.request, 4)
         buf = self.readall(self.request, struct.unpack(">L", buf)[0]-4)
+        log.debug("reading done.")
         return self.parse(buf)
 
     def write(self, message):
@@ -108,6 +119,7 @@ class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
             message = self.render(message)
         else:
             self.parse(message)
+        log.debug("write %s" % message[:128])
         self.request.sendall(struct.pack(">L", len(message)+4))
         self.request.sendall(message)
 
