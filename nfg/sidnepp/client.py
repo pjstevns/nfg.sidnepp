@@ -348,9 +348,15 @@ class SIDNEppClient(SIDNEppProtocol):
         contactInfo.append(c.postalInfo(type='loc', *postalInfo))
 
         if data.has_key('voice'):
-            contactInfo.append(c.voice(data['voice']))
+            value = data['voice']
+            if data.get('cc') == 'NL' and value.startswith('0'):
+                value = '+31.%s' % value
+            contactInfo.append(c.voice(value))
         if data.has_key('fax'):
-            contactInfo.append(c.fax(data['fax']))
+            value = data['fax']
+            if data.get('cc') == 'NL' and value.startswith('0'):
+                value = '+31.%s' % value
+            contactInfo.append(c.fax(value))
         if data.has_key('email'):
             contactInfo.append(c.email(data['email']))
         contactInfo.append(c.authInfo(c.pw('unused')))
