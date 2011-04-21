@@ -12,7 +12,7 @@ from zope.interface import implements
 import socket, struct, ssl
 from lxml import etree
 
-
+import re
 import sys
 import os.path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..','..'))
@@ -349,13 +349,17 @@ class SIDNEppClient(SIDNEppProtocol):
 
         if data.has_key('voice'):
             value = data['voice']
-            if data.get('cc') == 'NL' and value.startswith('0'):
-                value = '+31.%s' % value
+            if data.get('cc') == 'NL':
+                value = re.sub("[( \.)]","",value)
+                if value.startswith('0'):
+                    value = '+31.%s' % value
             contactInfo.append(c.voice(value))
         if data.has_key('fax'):
             value = data['fax']
-            if data.get('cc') == 'NL' and value.startswith('0'):
-                value = '+31.%s' % value
+            if data.get('cc') == 'NL':
+                value = re.sub("[( \.)]","",value)
+                if value.startswith('0'):
+                    value = '+31.%s' % value
             contactInfo.append(c.fax(value))
         if data.has_key('email'):
             contactInfo.append(c.email(data['email']))
