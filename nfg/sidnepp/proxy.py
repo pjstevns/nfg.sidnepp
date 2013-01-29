@@ -4,7 +4,7 @@
 #
 # license: GPLv3
 #
-# copyright 2010, NFG Net Facilities Group BV, www.nfg.nl
+# copyright 2010-2013, NFG Net Facilities Group BV, www.nfg.nl
 #
 # Paul Stevens, paul@nfg.nl
 
@@ -14,7 +14,7 @@ from SocketServer import TCPServer, BaseRequestHandler
 
 import sys
 import os.path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..','..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from nfg.sidnepp.protocol import SIDNEppProtocol
 from nfg.sidnepp.client import SIDNEppClient
 
@@ -23,9 +23,11 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+formatter = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 ch.setFormatter(formatter)
 log.addHandler(ch)
+
 
 class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
 
@@ -78,7 +80,7 @@ class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
         e = self.e_epp
         x = e.epp(
             e.response(
-                e.result(e.msg('You are now logged off.'),code='1500'),
+                e.result(e.msg('You are now logged off.'), code='1500'),
                 e.trID(
                     e.svTRID('1234')
                 )
@@ -93,11 +95,11 @@ class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
         while 1:
             try:
                 req = self.read()
-            except: # client hung up
+            except:  # client hung up
                 break
-            if self.query(req,'//epp:hello'):
+            if self.query(req, '//epp:hello'):
                 self._handle_hello(req)
-            elif self.query(req,'//epp:login'):
+            elif self.query(req, '//epp:login'):
                 self._handle_login(req)
             elif self.query(req, '//epp:logout'):
                 self._handle_logout(req)
@@ -110,17 +112,19 @@ class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
     def read(self):
         log.debug("reading...")
         buf = self.readall(self.request, 4)
-        buf = self.readall(self.request, struct.unpack(">L", buf)[0]-4)
+        buf = self.readall(self.request, struct.unpack(">L", buf)[0] - 4)
         log.debug("reading done.")
-        return self.parse(buf)
+        msg = self.parse(buf)
+        log.debug("read %s" % self.render(msg))
+        return msg
 
     def write(self, message):
         if type(message) == etree._Element:
             message = self.render(message)
         else:
             self.parse(message)
-        log.debug("write %s" % message[:128])
-        self.request.sendall(struct.pack(">L", len(message)+4))
+        log.debug("write %s" % message)
+        self.request.sendall(struct.pack(">L", len(message) + 4))
         self.request.sendall(message)
 
 
@@ -146,13 +150,14 @@ class SIDNEppProxy(TCPServer):
     client = None
 
     def __init__(self, (host, port), handler=None):
-        if not handler: handler=SIDNEppProxyHandler
+        if not handler:
+            handler = SIDNEppProxyHandler
         TCPServer.__init__(self, (host, port), handler)
 
     def login(self, remote_host, remote_port, username, password):
-        """ setup connection to remote EPP service 
+        """setup connection to remote EPP service
         """
-        self.client = SIDNEppClient(remote_host, remote_port, 
+        self.client = SIDNEppClient(remote_host, remote_port,
                                     username, password)
         return self.client._login
 
@@ -160,10 +165,11 @@ class SIDNEppProxy(TCPServer):
         print "proxy timeout"
         #raise IOError("request timeout")
 
+
 def usage():
     print """
 
-EPP Proxy server for SIDN 
+EPP Proxy server for SIDN
 
 usage:
 
@@ -189,17 +195,17 @@ if __name__ == '__main__':
     import getopt
     server = port = username = address = listen = None
 
-    server    = 'testdrs.domain-registry.nl'
-    port      = 700
-    username  = False
-    password  = False
+    server = 'testdrs.domain-registry.nl'
+    port = 700
+    username = False
+    password = False
 
-    address   = '127.0.0.1'
-    listen    = 7000
+    address = '127.0.0.1'
+    listen = 7000
 
     try:
         optlist, args = getopt.getopt(sys.argv[1:], "s:p:u:w:a:l", [
-            'server=', 
+            'server=',
             'port=',
             'username=',
             'password=',
@@ -210,7 +216,7 @@ if __name__ == '__main__':
         usage()
         sys.exit(2)
 
-    for o,a in optlist:
+    for o, a in optlist:
         if o == '--server':
             server = a
         if o == '--port':
@@ -229,8 +235,8 @@ if __name__ == '__main__':
         sys.exit(2)
 
     print "Starting SIDNEppProxy"
-    proxy = SIDNEppProxy((address,listen))
-    proxy.timeout=4
+    proxy = SIDNEppProxy((address, listen))
+    proxy.timeout = 4
     proxy.login(server, port, username, password)
     print "Connected to: %s:%d" % (server, port)
     print "Listen on: %s:%d" % (address, listen)

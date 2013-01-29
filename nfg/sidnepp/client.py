@@ -1,31 +1,51 @@
 #!/usr/bin/python
 
-# interface for SIDN EPP 
+# interface for SIDN EPP
 #
 # license: GPLv3
 #
-# copyright 2010, NFG Net Facilities Group BV, www.nfg.nl
-#       
+# copyright 2010-2013, NFG Net Facilities Group BV, www.nfg.nl
+#
 # Paul Stevens, paul@nfg.nl
 
 from zope.interface import implements
-import socket, struct, ssl
+import socket
+import struct
+import ssl
 from lxml import etree
 
 import re
 import sys
 import os.path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..','..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from nfg.sidnepp.interfaces import IEpp
 from nfg.sidnepp.protocol import SIDNEppProtocol
-from nfg.sidnepp.state import STATE_INIT, STATE_CONNECTED, STATE_SESSION, STATE_LOGGEDIN
+from nfg.sidnepp.state import (
+    STATE_INIT,
+    STATE_CONNECTED,
+    STATE_SESSION,
+    STATE_LOGGEDIN
+)
+
+import logging
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+formatter = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+ch.setFormatter(formatter)
+log.addHandler(ch)
+
+PHONE = re.compile("(\+[0 9]{1,3}\.[0 9]{1,14})?")
+
 
 class SIDNEppClient(SIDNEppProtocol):
     implements(IEpp)
 
     _state = STATE_INIT
-    
+
     # server frames
     _greeting = None
     _login = None
@@ -41,7 +61,7 @@ class SIDNEppClient(SIDNEppProtocol):
         self.connect()
 
     def connect(self):
-        assert(self._state == STATE_INIT) 
+        assert(self._state == STATE_INIT)
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((self.host, self.port))
         if self.ssl:
@@ -65,7 +85,9 @@ class SIDNEppClient(SIDNEppProtocol):
         else:
             self.parse(message)
 
-        l = len(message)+4
+        #log.debug(message)
+
+        l = len(message) + 4
         data = struct.pack(">L", l)
         try:
             self._fd.send(data)
@@ -83,7 +105,7 @@ class SIDNEppClient(SIDNEppProtocol):
     def read(self):
         buf = self.readall(self._fd, 4)
         need = struct.unpack(">L", buf)
-        need = need[0]-4
+        need = need[0] - 4
         buf = self.readall(self._fd, need)
         return self.parse(buf)
 
@@ -108,7 +130,7 @@ class SIDNEppClient(SIDNEppProtocol):
           <hello/>
         </epp>"""
         result = self.write(xml)
-        assert(self.query(result,"//epp:greeting"))
+        assert(self.query(result, "//epp:greeting"))
         self._state = STATE_SESSION
         self._greeting = '<?xml version="1.0" encoding="UTF-8"?>%s' % \
                 etree.tostring(result)
@@ -143,18 +165,18 @@ class SIDNEppClient(SIDNEppProtocol):
             s = self.read()
             r = self.query(s, "//epp:result")
         if int(r[0].get('code')) != 1000:
-            raise Exception, "login failed. code was %s\nfull message:\n%s" % (
-                r[0].get('code'), self.render(r[0]))
+            raise Exception("login failed. code was %s\nfull message:\n%s" % (
+                r[0].get('code'), self.render(r[0])))
 
         self._state = STATE_LOGGEDIN
         self._login = self.render(s)
         return s
 
     def logout(self):
-        assert(self._state == STATE_LOGGEDIN) 
+        assert(self._state == STATE_LOGGEDIN)
         xml = """<?xml version="1.0" encoding="UTF-8"?>
-        <epp xmlns="urn:ietf:params:xml:ns:epp-1.0" 
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+        <epp xmlns="urn:ietf:params:xml:ns:epp-1.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
         <command>
         <logout/>
@@ -166,10 +188,10 @@ class SIDNEppClient(SIDNEppProtocol):
         return r
 
     def poll(self, ack=None):
-        assert(self._state == STATE_LOGGEDIN) 
+        assert(self._state == STATE_LOGGEDIN)
         e = self.e_epp
         if ack:
-            poll = e.poll(op='ack',msgID=ack)
+            poll = e.poll(op='ack', msgID=ack)
         else:
             poll = e.poll(op='req')
         return self.write(e.epp(e.command(poll)))
@@ -187,7 +209,15 @@ class SIDNEppClient(SIDNEppProtocol):
         e = self.e_epp
         d = self.e_domain
         return self.write(
-            e.epp(e.command(e.info(d.info(d.name(domain,hosts='all')))))
+            e.epp(
+                e.command(
+                    e.info(
+                        d.info(
+                            d.name(domain, hosts='all')
+                        )
+                    )
+                )
+            )
         )
 
     def domain_create(self, domain, data):
@@ -218,16 +248,16 @@ class SIDNEppClient(SIDNEppProtocol):
     def _build_domain_update(self, key, value):
         d = self.e_domain
         u = []
-        if key in ['add','rem']:
-            if value.has_key('ns'):
-                l = [ d.hostObj(t) for t in value['ns'] ]
+        if key in ['add', 'rem']:
+            if 'ns' in value:
+                l = [d.hostObj(t) for t in value['ns']]
                 l = tuple(l)
                 u.append(d.ns(*l))
-            if value.has_key('tech'):
-                if type(value['tech']) != type([1,]):
-                    value['tech'] = [value['tech'],]
-                [ u.append(d.contact(t, type='tech')) for t in value['tech'] ]
-            if value.has_key('admin'):
+            if 'tech' in value:
+                if type(value['tech']) != type([1, ]):
+                    value['tech'] = [value['tech'], ]
+                [u.append(d.contact(t, type='tech')) for t in value['tech']]
+            if 'admin' in value:
                 u.append(d.contact(value['admin'], type='admin'))
         if key in ['chg']:
             u.append(d.registrant(value['owner']))
@@ -236,13 +266,13 @@ class SIDNEppClient(SIDNEppProtocol):
     def domain_update(self, domain, data):
         keys = data.keys()
         for k in keys:
-            assert(k in ['add','chg','rem'])
+            assert(k in ['add', 'chg', 'rem'])
         e = self.e_epp
         d = self.e_domain
         add = ()
         chg = ()
         rem = ()
-        for k,v in data.items():
+        for k, v in data.items():
             if k == 'add':
                 add = self._build_domain_update(k, v)
             elif k == 'rem':
@@ -293,7 +323,7 @@ class SIDNEppClient(SIDNEppProtocol):
         return self.write(x)
 
     def domain_transfer(self, domain, op, token=None):
-        assert(op in ['request','approve','cancel','query'])
+        assert(op in ['request', 'approve', 'cancel', 'query'])
         e = self.e_epp
         d = self.e_domain
 
@@ -327,17 +357,17 @@ class SIDNEppClient(SIDNEppProtocol):
         postalInfo = []
         contactInfo = []
 
-        if data.has_key('name'):
-            postalInfo = [c.name(data['name']),]
-        if data.has_key('org'):
+        if 'name' in data:
+            postalInfo = [c.name(data['name']), ]
+        if 'org' in data:
             postalInfo.append(c.org(data['org']))
 
-        if data.has_key('street'):
-            addrInfo = [ c.street(x) for x in data['street'] ]
+        if 'street' in data:
+            addrInfo = [c.street(x) for x in data['street']]
         addrInfo.append(c.city(data['city']))
-        if data.has_key('sp'):
+        if 'sp' in data:
             addrInfo.append(c.sp(data['sp']))
-        if (data.has_key('cc') and data['cc'] == 'NL') or data.has_key('pc'):
+        if ('cc' in data and data['cc'] == 'NL') or 'pc' in data:
             addrInfo.append(c.pc(data['pc']))
         addrInfo.append(c.cc(data['cc']))
 
@@ -347,21 +377,23 @@ class SIDNEppClient(SIDNEppProtocol):
 
         contactInfo.append(c.postalInfo(type='loc', *postalInfo))
 
-        if data.has_key('voice'):
-            value = data['voice']
+        if 'voice' in data:
+            value = data['voice'].strip()
             if data.get('cc') == 'NL':
-                value = re.sub("[( \.)]","",value)
                 if value.startswith('0'):
+                    value = re.sub("[( \.)]", "", value)
                     value = '+31.%s' % value
+            assert(PHONE.match(value))
             contactInfo.append(c.voice(value))
-        if data.has_key('fax'):
-            value = data['fax']
+        if 'fax' in data:
+            value = data['fax'].strip()
             if data.get('cc') == 'NL':
-                value = re.sub("[( \.)]","",value)
                 if value.startswith('0'):
+                    value = re.sub("[( \.)]", "", value)
                     value = '+31.%s' % value
+            assert(PHONE.match(value))
             contactInfo.append(c.fax(value))
-        if data.has_key('email'):
+        if 'email' in data:
             contactInfo.append(c.email(data['email']))
         contactInfo.append(c.authInfo(c.pw('unused')))
         return tuple(contactInfo)
@@ -370,9 +402,9 @@ class SIDNEppClient(SIDNEppProtocol):
         s = self.e_sidn
 
         sidnInfo = []
-        if data.has_key('legalForm'):
-            sidnInfo = [s.legalForm(data['legalForm']),]
-        if data.has_key('legalFormRegNo'):
+        if 'legalForm' in data:
+            sidnInfo = [s.legalForm(data['legalForm']), ]
+        if 'legalFormRegNo' in data:
             sidnInfo.append(s.legalFormRegNo(data['legalFormRegNo']))
         return tuple(sidnInfo)
 
@@ -386,12 +418,21 @@ class SIDNEppClient(SIDNEppProtocol):
 
         x = e.epp(
             e.command(
-                e.create(c.create(c.id(contact), *contactInfo)),
-                e.extension(s.ext(s.create(s.contact(*sidnInfo))))
+                e.create(
+                    c.create(
+                        c.id(contact),
+                        *contactInfo)
+                ),
+                e.extension(
+                    s.ext(
+                        s.create(
+                            s.contact(*sidnInfo)
+                        )
+                    )
+                )
             )
         )
         return self.write(x)
-        
 
     def contact_update(self, contact, data):
         e = self.e_epp
@@ -408,9 +449,14 @@ class SIDNEppClient(SIDNEppProtocol):
         if sidnInfo:
             extension = e.extension(s.ext(s.update(s.contact(*sidnInfo))))
 
-        x = e.epp(e.command(
-            e.update(c.update(c.id(contact), change)), 
-            *extension)
+        x = e.epp(
+            e.command(
+                e.update(
+                    c.update(
+                        c.id(contact), change)
+                ),
+                *extension
+            )
         )
         return self.write(x)
 
@@ -432,29 +478,29 @@ class SIDNEppClient(SIDNEppProtocol):
         return self.write(e.epp(e.command(e.info(h.info(h.name(host))))))
 
     def host_create(self, host, addr=None, ip="v4"):
-        assert(ip in ['v4','v6'])
+        assert(ip in ['v4', 'v6'])
         e = self.e_epp
         h = self.e_host
-        t = [h.name(host),]
+        t = [h.name(host), ]
         if addr:
             if type(addr) == type("1"):
-                addr = [addr,]
-            assert(type(addr) == type([1,]))
-            [ t.append(h.addr(a,ip=ip)) for a in addr ]
+                addr = [addr, ]
+            assert(type(addr) == type([1, ]))
+            [t.append(h.addr(a, ip=ip)) for a in addr]
         t = tuple(t)
         return self.write(e.epp(e.command(e.create(h.create(*t)))))
 
     def host_update(self, host, data):
-        assert(type(data) == type({'a':'b'}))
+        assert(type(data) == type({'a': 'b'}))
         e = self.e_epp
         h = self.e_host
-        t = [h.name(host),]
-        for k,v in data.items():
+        t = [h.name(host), ]
+        for k, v in data.items():
             if k == 'add':
-                [ t.append(h.add(h.addr(a))) for a in v ]
+                [t.append(h.add(h.addr(a))) for a in v]
             elif k == 'rem':
-                [ t.append(h.rem(h.addr(a))) for a in v ]
-            
+                [t.append(h.rem(h.addr(a))) for a in v]
+
         t = tuple(t)
         return self.write(e.epp(e.command(e.update(h.update(*t)))))
 

@@ -1,16 +1,15 @@
 #!/usr/bin/python
 
-# interface for SIDN EPP 
+# interface for SIDN EPP
 #
 # license: GPLv3
 #
-# copyright 2010, NFG Net Facilities Group BV, www.nfg.nl
-#       
+# copyright 2010-2013, NFG Net Facilities Group BV, www.nfg.nl
+#
 # Paul Stevens, paul@nfg.nl
 
 import lxml.etree as ET
 from lxml.builder import ElementMaker
-import os.path
 
 EPP_NS = 'urn:ietf:params:xml:ns:epp-1.0'
 HOST_NS = 'urn:ietf:params:xml:ns:host-1.0'
@@ -18,6 +17,7 @@ DOMAIN_NS = 'urn:ietf:params:xml:ns:domain-1.0'
 CONTACT_NS = 'urn:ietf:params:xml:ns:contact-1.0'
 SIDN_EXT_NS = 'http://rxsd.domain-registry.nl/sidn-ext-epp-1.0'
 XSI_NS = 'http://www.w3.org/2001/XMLSchema-instance'
+
 
 class SIDNEppProtocol(object):
 
@@ -28,7 +28,7 @@ class SIDNEppProtocol(object):
     SIDN_EXT = "{%s}" % SIDN_EXT_NS
 
     NSMAP = {
-        'epp' : EPP_NS, ## default namespace
+        'epp': EPP_NS,  # default namespace
         'host': HOST_NS,
         'domain': DOMAIN_NS,
         'contact': CONTACT_NS,
@@ -37,8 +37,6 @@ class SIDNEppProtocol(object):
     }
 
     def __init__(self):
-        xsd = os.path.join(os.path.dirname(__file__), 'xsd', 'sidn-ext-epp-1.0.xsd')
-##        self.parser = ET.XMLParser(schema=ET.XMLSchema(ET.parse(open(xsd,'r'))))
         self.e_epp = ElementMaker(
             namespace=EPP_NS, nsmap={
                 None: EPP_NS,
@@ -59,14 +57,15 @@ class SIDNEppProtocol(object):
         self.e_contact = ElementMaker(namespace=CONTACT_NS, nsmap={'contact':
                                                                  CONTACT_NS})
         self.e_sidn = ElementMaker(
-            namespace=SIDN_EXT_NS, 
+            namespace=SIDN_EXT_NS,
             nsmap={
                 'sidn-ext-epp': SIDN_EXT_NS
             }
         )
 
     def render(self, element):
-        return ET.tostring(element, encoding="UTF-8", pretty_print=True, standalone=False)
+        return ET.tostring(element, encoding="UTF-8",
+                           pretty_print=True, standalone=False)
 
     def parse(self, message):
         try:
