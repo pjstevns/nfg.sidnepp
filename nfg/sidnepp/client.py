@@ -323,7 +323,7 @@ class SIDNEppClient(SIDNEppProtocol):
         return self.write(x)
 
     def domain_transfer(self, domain, op, token=None):
-        assert(op in ['request', 'approve', 'cancel', 'query'])
+        assert(op in ['request', 'query'])
         e = self.e_epp
         d = self.e_domain
 

@@ -353,26 +353,6 @@ class testSIDNEppClient(unittest.TestCase):
         r = self.o.query(s, '//epp:result')[0]
         self.failUnless(int(r.get("code")) == 1000, self.o.render(s))
 
-        s = self.dummy.domain_transfer(domain, 'cancel')
-        r = self.dummy.query(s, '//epp:result')[0]
-        self.failUnless(int(r.get("code")) == 1000, self.dummy.render(s))
-
-        s = self.dummy.domain_transfer(domain, 'query')
-        r = self.dummy.query(s, '//epp:result')[0]
-        self.failUnless(int(r.get("code")) == 1000, self.dummy.render(s))
-
-        # cancelled transfers reset the token
-        s = self.o.domain_info(domain)
-        authtoken = self.o.query(s, '//domain:pw')[0].text
-
-        s = self.dummy.domain_transfer(domain, 'request', authtoken)
-        r = self.dummy.query(s, '//epp:result')[0]
-        self.failUnless(int(r.get("code")) == 1000, self.dummy.render(s))
-
-        s = self.o.domain_transfer(domain, 'approve')
-        r = self.o.query(s, '//epp:result')[0]
-        self.failUnless(int(r.get("code")) == 1000, self.o.render(s))
-
         s = self.dummy.domain_transfer(domain, 'query')
         r = self.dummy.query(s, '//epp:result')[0]
         self.failUnless(int(r.get("code")) == 1000, self.dummy.render(s))
@@ -435,21 +415,21 @@ class testSIDNEppClient(unittest.TestCase):
         self.failUnless(r.text == "194.109.214.3")
 
     def testHostCreate(self):
+        self.hostq.append('ns10.nfg.nl')
         s = self.o.host_create('ns10.nfgs.net')
         self.hostq.append('ns10.nfgs.net')
         r = self.o.query(s, '//epp:result')[0]
         self.failUnless(int(r.get("code")) == 1000)
 
         s = self.o.host_create('ns10.nfg.nl', '194.109.214.3')
-        self.hostq.append('ns10.nfg.nl')
         r = self.o.query(s, '//epp:result')[0]
         self.failUnless(int(r.get("code")) == 1000)
 
     def testHostUpdate(self):
+        self.hostq.append('ns99.nfg.nl')
         s = self.o.host_create('ns99.nfg.nl', '194.109.214.123')
         r = self.o.query(s, '//epp:result')[0]
-        self.failUnless(int(r.get("code")) == 1000)
-        self.hostq.append('ns99.nfg.nl')
+        self.failUnless(int(r.get("code")) == 1000, self.o.render(r))
         s = self.o.host_update('ns99.nfg.nl',
                                {
                                    'add': ['194.109.214.124'],
