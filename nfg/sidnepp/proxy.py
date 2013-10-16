@@ -13,6 +13,7 @@ from lxml import etree
 from SocketServer import TCPServer, BaseRequestHandler
 
 import sys
+import signal
 import os.path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from nfg.sidnepp.protocol import SIDNEppProtocol
@@ -27,6 +28,11 @@ formatter = logging.Formatter(
     "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 ch.setFormatter(formatter)
 log.addHandler(ch)
+
+
+def handle_pdb(sig, frame):
+    import pdb
+    pdb.Pdb().set_trace(frame)
 
 
 class SIDNEppProxyHandler(BaseRequestHandler, SIDNEppProtocol):
@@ -150,6 +156,7 @@ class SIDNEppProxy(TCPServer):
     client = None
 
     def __init__(self, (host, port), handler=None):
+        signal.signal(signal.SIGUSR1, handle_pdb)
         if not handler:
             handler = SIDNEppProxyHandler
         TCPServer.__init__(self, (host, port), handler)
