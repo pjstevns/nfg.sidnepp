@@ -53,9 +53,9 @@ class SIDNEppProtocol(object):
 
         self.e_host = ElementMaker(namespace=HOST_NS, nsmap={'host': HOST_NS})
         self.e_domain = ElementMaker(namespace=DOMAIN_NS, nsmap={'domain':
-                                                                DOMAIN_NS})
+                                                                 DOMAIN_NS})
         self.e_contact = ElementMaker(namespace=CONTACT_NS, nsmap={'contact':
-                                                                 CONTACT_NS})
+                                                                   CONTACT_NS})
         self.e_sidn = ElementMaker(
             namespace=SIDN_EXT_NS,
             nsmap={

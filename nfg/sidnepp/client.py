@@ -12,6 +12,7 @@ from zope.interface import implements
 import socket
 import struct
 import ssl
+import time
 from lxml import etree
 
 import re
@@ -65,16 +66,16 @@ class SIDNEppClient(SIDNEppProtocol):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((self.host, self.port))
         if self.ssl:
-            self._fd = ssl.wrap_socket(s)
+            self._fd = ssl.wrap_socket(s, suppress_ragged_eofs=False)
         else:
             self._fd = s
         self._state = STATE_CONNECTED
 
         self._greeting = '<?xml version="1.0" encoding="UTF-8"?>%s' % \
-                etree.tostring(self.hello())
+            etree.tostring(self.hello())
         if self.username and self.password:
             self._login = '<?xml version="1.0" encoding="UTF-8"?>%s' % \
-                    etree.tostring(self.login(self.username, self.password))
+                etree.tostring(self.login(self.username, self.password))
 
     def write(self, message):
         assert(self._state > STATE_INIT)
@@ -89,18 +90,19 @@ class SIDNEppClient(SIDNEppProtocol):
 
         l = len(message) + 4
         data = struct.pack(">L", l)
-        try:
-            self._fd.send(data)
-            self._fd.send(message)
-        except Exception:
-            # re-connect
-            print "Oops, reconnecting"
-            self.close()
-            self.connect()
-            self._fd.send(data)
-            self._fd.send(message)
-
-        return self.read()
+        loop = 1
+        while loop < 10:
+            try:
+                self._fd.send(data)
+                self._fd.send(message)
+                return self.read()
+            except Exception:
+                # re-connect
+                print "Oops, reconnecting"
+                self.close()
+                self.connect()
+            loop += 1
+            time.sleep(1)
 
     def read(self):
         buf = self.readall(self._fd, 4)
